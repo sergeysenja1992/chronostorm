@@ -1,0 +1,8 @@
+server:
+  port: 8080
+spring:
+  social:
+    google:
+      app-id: 935091762576-t6qubppjs51v90prf3aojjg15rfs6t7b.apps.googleusercontent.com
+      app-secret: xB2MQtrnk8Y-jgCb_oWFY2U8
+
