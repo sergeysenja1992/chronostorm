@@ -13,9 +13,8 @@ import com.vaadin.flow.spring.annotation.UIScope
 import com.vaadin.flow.templatemodel.TemplateModel
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import ua.pp.ssenko.chronostorm.repository.DataBase
-import ua.pp.ssenko.chronostorm.repository.User
-import ua.pp.ssenko.chronostorm.ui.user.UserSession
+import ua.pp.ssenko.chronostorm.domain.User
+import ua.pp.ssenko.chronostorm.repository.ChronostormRepository
 import ua.pp.ssenko.chronostorm.utils.logger
 import ua.pp.ssenko.chronostorm.utils.objectMapper
 import java.net.URL
@@ -26,7 +25,8 @@ import java.net.URL
 @UIScope
 @Component
 class GoogleSingIn(
-        @Value("\${spring.social.google.app-id}") val clientId:  String
+        @Value("\${spring.social.google.app-id}") val clientId:  String,
+        val repository : ChronostormRepository
 ) : PolymerTemplate<GoogleSingInModel>() {
 
     init {
@@ -44,7 +44,9 @@ class GoogleSingIn(
             notification.addThemeVariants(NotificationVariant.LUMO_PRIMARY)
             notification.open()
             val user = User(userResponse.email, userResponse.name)
-            UI.getCurrent().session.setAttribute(UserSession::class.java, UserSession(userResponse))
+            repository.saveUserIfAbsent(user)
+            val saveUser = repository.findByUsername(userResponse.email)
+            UI.getCurrent().session.setAttribute(User::class.java, saveUser)
             UI.getCurrent().navigate("")
         } else {
             val notification = Notification("Ошибка авторизации")

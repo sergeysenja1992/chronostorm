@@ -1,38 +1,43 @@
 package ua.pp.ssenko.chronostorm.repository
 
-import com.fasterxml.jackson.annotation.JsonIgnore
+import ua.pp.ssenko.chronostorm.domain.User
+import ua.pp.ssenko.chronostorm.utils.objectMapper
+import java.io.File
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
 
-data class DataBase (
-        private val users: MutableMap<String, User> = HashMap()
+class ChronostormRepository(
+        private val db: DataBase,
+        private val dbFile: File
 ) {
-    @JsonIgnore
-    var save: (dataBase: DataBase) -> Unit = {}
 
-    fun addUser(user: User) {
-        users.put(user.key, user)
+    private val executor = Executors.newSingleThreadExecutor()
+
+    fun saveUser(user: User) {
+        db.users.put(user.key, user)
         save()
     }
 
-    fun addUserIfAbsent(user: User) {
-        users.putIfAbsent(user.key, user)
+    fun saveUserIfAbsent(user: User) {
+        db.users.putIfAbsent(user.key, user)
         save()
     }
 
-    fun getUser(key: String) = users.get(key)
+    fun getUser(key: String) = db.users.get(key)
 
     fun save() {
-        save.invoke(this)
+        executor.submit{
+            objectMapper().writeValue(dbFile, db)
+        }
     }
-}
 
-interface StoredEntity {
-    val key: String
-}
-
-data class User(
-        val username: String,
-        var name: String
-): StoredEntity {
-    override val key: String get() = username
+    fun findByUsername(username: String) = db.users.get(username)
 
 }
+
+data class DataBase (
+        val users: ConcurrentHashMap<String, User> = ConcurrentHashMap()
+)
+
+
+

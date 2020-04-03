@@ -1,0 +1,10 @@
+
+:host([has-value]:not([invalid])) [part="label"] {
+  color: var(--material-primary-text-color);
+}
+
+.table-title {
+  border: solid 3px;
+  font-weight: 800;
+  background-color: #dffdbe;
+}
