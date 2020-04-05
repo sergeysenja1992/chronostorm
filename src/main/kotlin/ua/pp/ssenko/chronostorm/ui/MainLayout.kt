@@ -12,7 +12,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.theme.Theme
 import com.vaadin.flow.theme.lumo.Lumo
-import org.springframework.web.servlet.function.router
 
 @Theme(Lumo::class, variant = Lumo.LIGHT)
 class MainLayout : AppLayout() {
@@ -27,7 +26,6 @@ class MainLayout : AppLayout() {
                 isSpacing = true
             }
         }
-
         val skills = RouterLink("", SkillsView::class.java).apply {
             horizontalLayout {
                 icon(VaadinIcon.FILE_TEXT) {
@@ -37,7 +35,16 @@ class MainLayout : AppLayout() {
                 isSpacing = true
             }
         }
-        val menuLayout = VerticalLayout(home, skills)
+        val mapView = RouterLink("", MapsList::class.java).apply {
+            horizontalLayout {
+                icon(VaadinIcon.MAP_MARKER) {
+                    alignSelf = FlexComponent.Alignment.CENTER
+                }
+                label("Карты/Локации")
+                isSpacing = true
+            }
+        }
+        val menuLayout = VerticalLayout(mapView)
         addToDrawer(menuLayout)
         addToNavbar(drawerToggle)
     }

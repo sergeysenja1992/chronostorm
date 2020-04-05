@@ -1,0 +1,14 @@
+/* */
+.add-map-button {
+    border-bottom-color: var(--lumo-primary-color);
+    border-style: dashed;
+    border-width: 4px;
+    opacity: 0.75;
+}
+
+.plus-button {
+    font-size: 90px;
+    font-weight: 100;
+    color: var(--lumo-primary-color);
+}
+

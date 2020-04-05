@@ -90,3 +90,23 @@
   margin-right: -212px;
   color: darkcyan;
 }
+
+.experience-value-icon {
+  margin-right: 0px;
+  width: 70px;
+  height: 70px;
+  top: 29px;
+  color: #43ca3c;
+  opacity: 0.75;
+}
+
+.experience-value {
+  margin-left: -33px!important;
+  font-size: 28px;
+  margin-top: -4px;
+  z-index: 3;
+}
+
+.experience-input {
+  margin-left: 25px;
+}

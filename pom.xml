@@ -28,12 +28,30 @@
 	</repositories>
 
 	<dependencies>
+
+		<dependency>
+			<groupId>org.vaadin.stefan</groupId>
+			<artifactId>dnd</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>28.2-jre</version>
+		</dependency>
+
 		<dependency>
 			<groupId>nc.unc.vaadin.flow.polymer</groupId>
 			<artifactId>iron-icons</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.github.appreciated</groupId>
+			<artifactId>vaadin-css-grid</artifactId>
+			<version>2.0.0.beta3</version>
+		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.github.mvysny.karibudsl/karibu-dsl-v10 -->
 		<dependency>

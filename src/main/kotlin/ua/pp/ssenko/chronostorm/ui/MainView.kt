@@ -40,14 +40,14 @@ class MainView(db: ChronostormRepository): AbstractView(db) {
 
     override fun beforeEnter(p0: BeforeEnterEvent?) {
         super.beforeEnter(p0)
-        removeAll()
-        content()
         hideSpacing()
 
         val current = UI.getCurrent()
         val page = current.page
         page.retrieveExtendedClientDetails{
             onResize(it.bodyClientWidth)
+            removeAll()
+            content()
         }
         page.addBrowserWindowResizeListener { event ->
             onResize(event.width)
@@ -78,7 +78,7 @@ class MainView(db: ChronostormRepository): AbstractView(db) {
                 hl {
                     val health = healthBlock()
                     val energy = energyBlock()
-                    val experience = healthBlock()
+                    val experience = experienceBlock()
                     setFlexGrow(1.0, health, energy, experience)
                     setWidthFull()
                 }
@@ -86,7 +86,7 @@ class MainView(db: ChronostormRepository): AbstractView(db) {
                 vl {
                     val health = healthBlock()
                     val energy = energyBlock()
-                    val experience = healthBlock()
+                    val experience = experienceBlock()
                 }
             }
 
@@ -114,13 +114,13 @@ class MainView(db: ChronostormRepository): AbstractView(db) {
             add(icon)
             horizontalLayout {
                 className = "resource-layout"
-                val value = label("888") {
+                label("888") {
                     className = "resource-value"
                 }
             }
             horizontalLayout {
                 className = "resource-layout"
-                val value = label("888") {
+                label("888") {
                     addClassNames("resource-value", "resource-actual-value")
                 }
             }
@@ -152,13 +152,13 @@ class MainView(db: ChronostormRepository): AbstractView(db) {
             add(icon)
             horizontalLayout {
                 className = "resource-layout"
-                val value = label("888") {
+                label("888") {
                     addClassNames("resource-value", "energy-value")
                 }
             }
             horizontalLayout {
                 className = "resource-layout"
-                val value = label("888") {
+                label("888") {
                     addClassNames("resource-value", "resource-actual-value", "energy-value")
                 }
             }
@@ -168,6 +168,26 @@ class MainView(db: ChronostormRepository): AbstractView(db) {
                 getElement().setAttribute("type", "tel")
             })
         }
+
+    private fun HasComponents.experienceBlock() =
+            horizontalLayout {
+                hideSpacing()
+                className = "experience-value-wrapper"
+                val icon = icon(VaadinIcon.LINE_CHART)
+                icon.addClassNames("main-resource-icon", "experience-value-icon")
+                add(icon)
+                horizontalLayout {
+                    className = "resource-layout"
+                    label("888") {
+                        addClassNames("resource-value", "resource-actual-value", "experience-value")
+                    }
+                }
+                add(VaadinTelInput().apply {
+                    label = "Опыт"
+                    addClassNames("resource-area", "experience-input")
+                    getElement().setAttribute("type", "tel")
+                })
+            }
 
 
     private fun ThemableLayout.hideSpacing() {
