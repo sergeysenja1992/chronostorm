@@ -18,11 +18,19 @@ abstract class AbstractView(protected val db: ChronostormRepository): VerticalLa
                 ui.navigate("login");
             }
         }
+        updateUi()
     }
 
     init {
         UI.getCurrent().session.setAttribute(User::class.java, User("sergeysenja1992@gmail.com", "Семъён"))
     }
+
+    fun updateUi() {
+        removeAll()
+        content()
+    }
+
+    abstract fun VerticalLayout.content()
 
     fun getUserSession(): User? = UI.getCurrent().session.getAttribute(User::class.java)
 

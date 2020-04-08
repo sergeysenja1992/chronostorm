@@ -1,8 +1,12 @@
 package ua.pp.ssenko.chronostorm.repository
 
+import ua.pp.ssenko.chronostorm.domain.Attributes
+import ua.pp.ssenko.chronostorm.domain.LocationMapMetainfo
+import ua.pp.ssenko.chronostorm.domain.PersonalCharacteristic
 import ua.pp.ssenko.chronostorm.domain.User
 import ua.pp.ssenko.chronostorm.utils.objectMapper
 import java.io.File
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
@@ -23,6 +27,13 @@ class ChronostormRepository(
         save()
     }
 
+    fun saveMap(map: LocationMapMetainfo) {
+        db.maps.putIfAbsent(map.key, map)
+        save()
+    }
+
+    fun getMaps() = db.maps.values.sortedBy { it.order };
+
     fun getUser(key: String) = db.users.get(key)
 
     fun save() {
@@ -32,13 +43,16 @@ class ChronostormRepository(
     }
 
     fun findByUsername(username: String) = db.users.get(username)
+    fun removeLocationMap(map: LocationMapMetainfo) {
+        db.maps.remove(map.key)
+        save()
+    }
 
 }
 
 data class DataBase (
-        val users: ConcurrentHashMap<String, User> = ConcurrentHashMap()
+        val users: ConcurrentHashMap<String, User> = ConcurrentHashMap(),
+        val maps:  ConcurrentHashMap<String, LocationMapMetainfo> = ConcurrentHashMap()
 )
-
-
 
 

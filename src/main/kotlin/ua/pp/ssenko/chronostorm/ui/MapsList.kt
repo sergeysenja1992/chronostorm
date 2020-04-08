@@ -1,7 +1,7 @@
 package ua.pp.ssenko.chronostorm.ui
 
-import com.github.appreciated.card.Card
 import com.github.appreciated.card.RippleClickableCard
+import com.github.appreciated.card.action.ActionButton
 import com.github.appreciated.css.grid.GridLayoutComponent
 import com.github.appreciated.css.grid.sizes.Flex
 import com.github.appreciated.css.grid.sizes.Length
@@ -10,46 +10,52 @@ import com.github.appreciated.css.grid.sizes.Repeat.RepeatMode
 import com.github.appreciated.layout.FlexibleGridLayout
 import com.github.mvysny.karibudsl.v10.*
 import com.vaadin.flow.component.Component
-import com.vaadin.flow.component.HasComponents
+import com.vaadin.flow.component.Key
+import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.dependency.StyleSheet
+import com.vaadin.flow.component.icon.Icon
+import com.vaadin.flow.component.icon.VaadinIcon
 import com.vaadin.flow.component.orderedlayout.FlexComponent
+import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.spring.annotation.UIScope
 import org.springframework.stereotype.Service
+import ua.pp.ssenko.chronostorm.domain.LocationMapMetainfo
 import ua.pp.ssenko.chronostorm.repository.ChronostormRepository
-import ua.pp.ssenko.chronostorm.repository.MapsRepository
-import javax.annotation.PostConstruct
+import ua.pp.ssenko.chronostorm.repository.MapsService
+import kotlin.concurrent.thread
 
-
-@Route("maps", layout = MainLayout::class)
+@Route("maps", layout = MapsLayout::class)
 @UIScope
 @Service
 @StyleSheet("../css/maps.css")
 class MapsList(
         db: ChronostormRepository,
-        val maps: MapsRepository
+        val maps: MapsService
 ): AbstractView(db) {
+
+    val CARD_SIZE = "300px"
+
+    var searchInput: String? = null
+    var cards: List<MapCard> = emptyList()
 
     init {
 
     }
 
-    @PostConstruct
-    fun content() {
+    override fun VerticalLayout.content() {
         val user = getCurrentUser()
         user ?: return
 
         val cards = ArrayList<Component>()
-        repeat(1){
-            cards.add(card())
-        }
-
+        val mapCards = db.getMaps().map { it.card() }
+        this@MapsList.cards = ArrayList(mapCards)
+        cards.addAll(mapCards)
         cards.add(createMapButton())
-
         horizontalLayout {
                     val layout = FlexibleGridLayout()
-                            .withColumns(RepeatMode.AUTO_FILL, MinMax(Length("250px"), Flex(1.0)))
-                            .withAutoRows(Length("250px"))
+                            .withColumns(RepeatMode.AUTO_FILL, MinMax(Length(CARD_SIZE), Flex(1.0)))
+                            .withAutoRows(Length(CARD_SIZE))
                             .withItems(
                                     *cards.toList().toTypedArray()
                             )
@@ -65,6 +71,8 @@ class MapsList(
     }
 
     private fun createMapButton() = RippleClickableCard().apply {
+        width = CARD_SIZE
+        height = CARD_SIZE
         verticalLayout {
             val label = label("+") {
                 className = "plus-button"
@@ -76,24 +84,90 @@ class MapsList(
             setSizeFull()
         }
         addClickListener {
-
+            maps.createMap()
+            updateUi()
         }
     }
 
-    fun HasComponents.card(): Card {
-        val card = Card()
+    fun LocationMapMetainfo.card(): MapCard {
+        val map = this
+        val card = MapCard(map)
+        val actionButton: Component = ActionButton(Icon(VaadinIcon.TRASH)) {
+            card.showConfirmDeleteDialog(map)
+        }.apply {
+            className = "remove-map-button"
+        }
+        card.addClickListener {
+            UI.getCurrent().navigate("map/${map.id}")
+        }
+        card.width = CARD_SIZE
+        card.height = CARD_SIZE
+        card.add(actionButton)
         card.add(verticalLayout {
             label {
-                text = "Добро пожаловать на огонёк"
+                text = map.name
+                className = "card-title"
+                tooltip = map.name
             }
-            val img = image(src = "img/logo.jpg") {
-                width = "128px"
+            if (map.previewImage != null) {
+                val img = image(src = map.previewImage) {
+                    className = "map-preview"
+                }
+                setHorizontalComponentAlignment(FlexComponent.Alignment.CENTER, img);
+                setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+            } else {
+                val img = image(src = "img/logo.jpg") {
+                    className = "map-preview"
+                }
+                setHorizontalComponentAlignment(FlexComponent.Alignment.CENTER, img);
+                setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
             }
-            setHorizontalComponentAlignment(FlexComponent.Alignment.CENTER, img);
-            setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
         })
         return card
     }
 
+    private fun MapCard.showConfirmDeleteDialog(map: LocationMapMetainfo) {
+        dialog {
+            val dialog = this
+            verticalLayout {
+                label(""" Вы действительно хотите удалить ${map.name}? """)
+                horizontalLayout {
+                    button {
+                        text = "Да"
+                        addClickListener {
+                            db.removeLocationMap(map)
+                            dialog.close()
+                            val current = UI.getCurrent()
+                            thread {
+                                current.access {
+                                    this@showConfirmDeleteDialog.isVisible = false
+                                }
+                            }
+                        }
+                        addClickShortcut(Key.ENTER)
+                    }
+                    button {
+                        text = "Нет"
+                        addClickListener {
+                            dialog.close()
+                        }
+                    }
+                    setWidthFull()
+                    justifyContentMode = FlexComponent.JustifyContentMode.END
+                }
+            }
+
+        }.open()
+    }
+
+    fun updateCards() {
+        val searchInput = searchInput
+        cards.forEach {
+            it.isVisible = searchInput.isNullOrBlank() || it.map.name.contains(searchInput, true)
+        }
+    }
+
 }
+
+class MapCard(val map: LocationMapMetainfo): RippleClickableCard()
 

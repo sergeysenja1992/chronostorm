@@ -3,11 +3,21 @@ package ua.pp.ssenko.chronostorm.domain
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 
-class LocationMap(val id: String) {
-
-    val size: Size = Size()
+class LocationMap(val id: String, val name: String, val order: Long = 0) {
+    val size: Size = Size(2048, 2048, 1.0)
     val customIcons: MutableList<CustomIcon> = ArrayList()
     val mapObjects: MutableList<MapObject> = ArrayList()
+
+    fun toMetainfo() = LocationMapMetainfo(id, name, order)
+}
+
+data class LocationMapMetainfo(
+        val id: String,
+        val name: String,
+        val order: Long,
+        val previewImage: String? = null
+): StoredEntity {
+    override val key: String get() = id
 }
 
 class CustomIcon {

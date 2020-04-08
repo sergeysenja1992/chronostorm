@@ -67,8 +67,7 @@ class MainView(db: ChronostormRepository): AbstractView(db) {
         }
     }
 
-    @PostConstruct
-    fun content() {
+    override fun VerticalLayout.content() {
         val user = getCurrentUser()
         user ?: return
         verticalLayout {

@@ -12,3 +12,23 @@
     color: var(--lumo-primary-color);
 }
 
+.remove-map-button {
+    height: 0;
+    left: 265px;
+}
+
+.card-title {
+    /*margin: 0;*/
+    text-align: center;
+    width: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.map-preview {
+    align-self: center;
+    width: 230px;
+    margin: 0;
+}
+

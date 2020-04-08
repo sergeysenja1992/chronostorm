@@ -24,4 +24,7 @@ class AppConfig {
         }
     }
 
+    @Bean
+    fun locationMapsDirectory() = "${System.getProperty("user.home")}/locationMaps"
+
 }
