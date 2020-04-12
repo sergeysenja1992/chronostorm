@@ -13,6 +13,7 @@ import com.vaadin.flow.component.Component
 import com.vaadin.flow.component.Key
 import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.dependency.StyleSheet
+import com.vaadin.flow.component.dialog.Dialog
 import com.vaadin.flow.component.icon.Icon
 import com.vaadin.flow.component.icon.VaadinIcon
 import com.vaadin.flow.component.orderedlayout.FlexComponent
@@ -127,7 +128,7 @@ class MapsList(
     }
 
     private fun MapCard.showConfirmDeleteDialog(map: LocationMapMetainfo) {
-        dialog {
+        val dialog = Dialog().apply {
             val dialog = this
             verticalLayout {
                 label(""" Вы действительно хотите удалить ${map.name}? """)
@@ -137,12 +138,7 @@ class MapsList(
                         addClickListener {
                             db.removeLocationMap(map)
                             dialog.close()
-                            val current = UI.getCurrent()
-                            thread {
-                                current.access {
-                                    this@showConfirmDeleteDialog.isVisible = false
-                                }
-                            }
+                            this@showConfirmDeleteDialog.isVisible = false
                         }
                         addClickShortcut(Key.ENTER)
                     }
@@ -157,7 +153,9 @@ class MapsList(
                 }
             }
 
-        }.open()
+        }
+        this@MapsList.add(dialog)
+        dialog.open()
     }
 
     fun updateCards() {

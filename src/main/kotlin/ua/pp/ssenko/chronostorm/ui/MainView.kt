@@ -26,7 +26,6 @@ import ua.pp.ssenko.chronostorm.repository.ChronostormRepository
 import ua.pp.ssenko.chronostorm.ui.DeviceType.DESKTOP
 import ua.pp.ssenko.chronostorm.ui.DeviceType.MOBILE
 import ua.pp.ssenko.chronostorm.ui.custom.VaadinTelInput
-import javax.annotation.PostConstruct
 import kotlin.reflect.KMutableProperty0
 
 
@@ -38,8 +37,8 @@ class MainView(db: ChronostormRepository): AbstractView(db) {
 
     var deviceType = MOBILE;
 
-    override fun beforeEnter(p0: BeforeEnterEvent?) {
-        super.beforeEnter(p0)
+    override fun beforeEnter(beforeEnterEvent: BeforeEnterEvent) {
+        super.beforeEnter(beforeEnterEvent)
         hideSpacing()
 
         val current = UI.getCurrent()

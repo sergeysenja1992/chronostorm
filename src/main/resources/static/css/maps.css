@@ -32,3 +32,20 @@
     margin: 0;
 }
 
+.icons-panel {
+    border-right: solid #f3f5f7 2px;
+    transition-duration: 0.5s;
+}
+
+.hide-icons-button {
+    margin-left: 38px;
+}
+
+.hidden-icons-panel {
+    margin-left: -300px;
+}
+
+.icon-label-caption {
+    font-size: 12px;
+    white-space: nowrap;
+}

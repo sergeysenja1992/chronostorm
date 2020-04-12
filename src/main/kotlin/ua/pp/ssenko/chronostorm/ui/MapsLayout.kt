@@ -16,6 +16,8 @@ class MapsLayout : MainLayout() {
 
     fun content(): Component = TextField().apply {
         setWidthFull()
+        placeholder = "Поиск"
+
         valueChangeMode = ValueChangeMode.EAGER
         addValueChangeListener {
             val activeView = view

@@ -26,8 +26,13 @@ class MapsService(
 
     private val executor = Executors.newSingleThreadExecutor()
     private val activateMaps: Cache<String, LocationMap> = CacheBuilder.newBuilder().weakValues().build()
+    private val filesCache: Cache<String, ByteArray> = CacheBuilder.newBuilder().softValues().build()
 
     fun getMap(key: String): LocationMap = activateMaps.get(key){loadMap(key)}
+
+    fun getFile(relativePath: String): ByteArray = filesCache.get(relativePath){loadFile(relativePath)}
+
+    private fun loadFile(relativePath: String) = File("${locationMapsDirectory}/${relativePath}").readBytes()
 
     private fun loadMap(key: String?): LocationMap {
 
@@ -66,6 +71,8 @@ class MapsService(
     private fun LocationMap.toMetadataPath() = "${dirPath()}/metadata.json"
 
     private fun LocationMap.dirPath() = "${locationMapsDirectory}/${this.id}"
+
+    private fun LocationMap.iconsFile() = "${locationMapsDirectory}/icons.json"
 
     private fun LocationMap.save() {
         executor.submit {

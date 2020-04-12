@@ -7,14 +7,16 @@ import com.vaadin.flow.router.BeforeEnterObserver
 import ua.pp.ssenko.chronostorm.domain.User
 import ua.pp.ssenko.chronostorm.repository.ChronostormRepository
 import ua.pp.ssenko.chronostorm.utils.logger
+import ua.pp.ssenko.chronostorm.utils.setAttribute
 
 abstract class AbstractView(protected val db: ChronostormRepository): VerticalLayout(), BeforeEnterObserver {
-    override fun beforeEnter(p0: BeforeEnterEvent?) {
+    override fun beforeEnter(beforeEnterEvent: BeforeEnterEvent) {
         logger.info("Before enter")
         val userSession = getUserSession()
         if (userSession == null) {
             val ui = UI.getCurrent()
             ui.access {
+                ui.session.setAttribute(beforeEnterEvent.location)
                 ui.navigate("login");
             }
         }
@@ -22,7 +24,7 @@ abstract class AbstractView(protected val db: ChronostormRepository): VerticalLa
     }
 
     init {
-        UI.getCurrent().session.setAttribute(User::class.java, User("sergeysenja1992@gmail.com", "Семъён"))
+        UI.getCurrent().session.setAttribute(User("sergeysenja1992@gmail.com", "Семъён"))
     }
 
     fun updateUi() {

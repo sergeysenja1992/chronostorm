@@ -9,6 +9,7 @@ import com.vaadin.flow.component.dependency.NpmPackage
 import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.polymertemplate.PolymerTemplate
+import com.vaadin.flow.router.Location
 import com.vaadin.flow.server.VaadinSession
 import com.vaadin.flow.spring.annotation.UIScope
 import com.vaadin.flow.templatemodel.TemplateModel
@@ -16,8 +17,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import ua.pp.ssenko.chronostorm.domain.User
 import ua.pp.ssenko.chronostorm.repository.ChronostormRepository
+import ua.pp.ssenko.chronostorm.utils.getAttribute
 import ua.pp.ssenko.chronostorm.utils.logger
 import ua.pp.ssenko.chronostorm.utils.objectMapper
+import ua.pp.ssenko.chronostorm.utils.setAttribute
 import java.net.URL
 
 @Tag("google-sing-in")
@@ -40,15 +43,20 @@ class GoogleSingIn(
         val response = URL("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${token}").readText()
         val userResponse = objectMapper().readValue<UserResponse>(response);
         if (userResponse.verified_email) {
-            val notification = Notification("С возвращением ${userResponse.name}.")
-            notification.setDuration(5000)
-            notification.addThemeVariants(NotificationVariant.LUMO_PRIMARY)
-            notification.open()
             val user = User(userResponse.email, userResponse.name)
             repository.saveUserIfAbsent(user)
             val saveUser = repository.findByUsername(userResponse.email)
-            UI.getCurrent().session.setAttribute(User::class.java, saveUser)
-            UI.getCurrent().navigate("maps")
+            val notification = Notification("С возвращением ${saveUser?.name}.")
+            notification.setDuration(5000)
+            notification.addThemeVariants(NotificationVariant.LUMO_PRIMARY)
+            notification.open()
+            UI.getCurrent().session.setAttribute(saveUser)
+            val location: Location? = UI.getCurrent().session.getAttribute()
+            if (location != null) {
+                UI.getCurrent().navigate(location.path)
+            } else {
+                UI.getCurrent().navigate("maps")
+            }
             VaadinSession.getCurrent().getSession().setMaxInactiveInterval(3600 * 5);
         } else {
             val notification = Notification("Ошибка авторизации")
