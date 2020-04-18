@@ -49,3 +49,12 @@
     font-size: 12px;
     white-space: nowrap;
 }
+
+.ch-icon-panel {
+    /*overflow-y: scroll;*/
+    /*padding: 8px;*/
+}
+
+.ch-icon-acc {
+    display: flex;
+}
