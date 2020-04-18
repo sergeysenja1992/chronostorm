@@ -54,6 +54,7 @@ open class MainLayout : AppLayout() {
         val menuLayout = VerticalLayout(mapView)
         addToDrawer(menuLayout)
         addToNavbar(drawerToggle)
+        isDrawerOpened = false
     }
 
 

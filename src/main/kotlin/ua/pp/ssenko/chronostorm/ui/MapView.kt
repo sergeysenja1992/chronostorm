@@ -38,6 +38,7 @@ import org.springframework.stereotype.Service
 import ua.pp.ssenko.chronostorm.domain.LocationMap
 import ua.pp.ssenko.chronostorm.repository.ChronostormRepository
 import ua.pp.ssenko.chronostorm.repository.MapsService
+import ua.pp.ssenko.chronostorm.ui.custom.IconsAcc
 import ua.pp.ssenko.chronostorm.ui.custom.IconsPanel
 import ua.pp.ssenko.chronostorm.utils.hideSpacing
 import java.util.*
@@ -125,18 +126,18 @@ class MapView(
             }
         }
 
-        val iconsPanel = IconsPanel()
+        val iconsAcc = IconsAcc()
         verticalLayout {
             setSizeFull()
             className = "ch-icon-panel"
             hideSpacing()
-            add(iconsPanel)
+            add(iconsAcc)
         }
 
         searchField.apply {
             valueChangeMode = EAGER
             val listener = addValueChangeListener { event ->
-                iconsPanel.setSearch(event.value)
+                iconsAcc.setSearch(event.value)
             }
         }
     }
