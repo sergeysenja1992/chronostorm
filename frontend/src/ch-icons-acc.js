@@ -91,7 +91,8 @@ class ChIconsAcc extends PolymerElement {
 
 
     showMore(e) {
-        let ids = e.path
+        let path = e.__composedPath || e.path;
+        let ids = path
             .filter(it => it.getAttribute && it.getAttribute('elementid'))
             .map(it => it.getAttribute('elementid'));
 

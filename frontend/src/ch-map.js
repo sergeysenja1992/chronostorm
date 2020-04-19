@@ -190,7 +190,6 @@ class ChMap extends GestureEventListeners(PolymerElement){
             case 'track':
                 style.left = (parseInt(style.left) + e.detail.ddx) + "px";
                 style.top = (parseInt(style.top) + e.detail.ddy) + "px";
-                console.log(`${element.getBoundingClientRect().x}|${style.left}`);
                 break;
             case 'end':
                 style.cursor = 'grab';
