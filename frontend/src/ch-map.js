@@ -87,26 +87,28 @@ class ChMap extends GestureEventListeners(PolymerElement){
         this.map = {};
         this.$.mainContentWrapper.scale = 1;
         window.addEventListener("wheel", event => {
-            //if(event.ctrlKey === true) {
-                const delta = Math.sign(event.deltaY);
-                event.preventDefault();
-                if (delta > 0) {
-                    let scale = this.$.mainContentWrapper.scale + 0.03;
-                    if (scale > 400) {
-                        return;
-                    }
-                    this.$.mainContentWrapper.scale = scale;
-                    this.$.mainContentWrapper.style.transform = `scale(${scale})`;
-                } else {
-                    let scale = this.$.mainContentWrapper.scale - 0.03;
-                    if (scale < 0.3) {
-                        return;
-                    }
-                    this.$.mainContentWrapper.scale = scale;
-                    this.$.mainContentWrapper.style.transform = `scale(${scale})`;
+            let path = event.__composedPath || event.path;
+            if (path.filter(it => it.id === 'mainContent').length <= 0) {
+                return;
+            }
+            const delta = Math.sign(event.deltaY);
+            event.preventDefault();
+            if (delta < 0) {
+                let scale = this.$.mainContentWrapper.scale + 0.05;
+                if (scale > 400) {
+                    return;
                 }
-                this.updateDebugInfo();
-            //}
+                this.$.mainContentWrapper.scale = scale;
+                this.$.mainContentWrapper.style.transform = `scale(${scale})`;
+            } else {
+                let scale = this.$.mainContentWrapper.scale - 0.05;
+                if (scale < 0.3) {
+                    return;
+                }
+                this.$.mainContentWrapper.scale = scale;
+                this.$.mainContentWrapper.style.transform = `scale(${scale})`;
+            }
+            this.updateDebugInfo();
         });
         this.i = 0;
 
