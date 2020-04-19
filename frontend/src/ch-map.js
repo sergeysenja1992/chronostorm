@@ -65,8 +65,8 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
 <div id="wrapper" class="wrapper">
     <div id="mainContentWrapper">
-        <div id="mainContent" class="bg-grid" on-track="handleMainContentTrack" on-down="handleMainContentDown" on-up="handleMainContentUp">
-            <div id="testElement" on-track="handleTrack">[[message]]</div>
+        <div id="mainContent" class="bg-grid" on-track="handleMainContentTrack" on-down="handleTrackDown" on-up="handleTrackUp">
+            <div id="testElement" on-track="handleTrack" on-down="handleTrackDown" on-up="handleTrackUp">[[message]]</div>
         </div>    
     </div>
     <div id="debugInfo">
@@ -119,7 +119,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
         }, false);
         let self = this;
         this.root.getElementById("mainContent").addEventListener("touchmove", function(e) {
-            if (e.touches.length !== 2) {
+            if (e.touches.length !== 2 && e.touches[0] && e.touches[1]) {
                 return;
             }
 
@@ -143,6 +143,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
             }
             this.zoomMainContent = null;
         }, false);
+        this.updateDebugInfo();
     }
 
     distance(touches) {
@@ -162,13 +163,13 @@ class ChMap extends GestureEventListeners(PolymerElement){
     }
 
 
-    handleMainContentDown(e) {
+    handleTrackDown(e) {
         this.unselectText();
-        this.$.mainContent.style.cursor = 'move';
+        this.$[e.target.id].style.cursor = 'move';
     }
 
-    handleMainContentUp(e) {
-        this.$.mainContent.style.cursor = 'grab';
+    handleTrackUp(e) {
+        this.$[e.target.id].style.cursor = 'grab';
     }
 
     handleMainContentTrack(e) {
@@ -176,17 +177,20 @@ class ChMap extends GestureEventListeners(PolymerElement){
             return;
         }
         let container = this.$.wrapper.getBoundingClientRect();
-        let boundingClientRect = this.$.mainContentWrapper.getBoundingClientRect();
-        let style = this.$.mainContentWrapper.style;
+        let element = this.$.mainContentWrapper;
+        let style = element.style;
         let scale = this.$.mainContentWrapper.scale;
-        switch(e.detail.state) {
+        switch (e.detail.state) {
             case 'start':
-                this.$.mainContentWrapper.xOffset = e.detail.x - boundingClientRect.x / scale;
-                this.$.mainContentWrapper.yOffset = e.detail.y - boundingClientRect.y / scale;
+                if (!style.left && !style.top) {
+                    style.left = (element.getBoundingClientRect().x / scale - container.x / scale) + "px";
+                    style.top = (element.getBoundingClientRect().y / scale - container.y / scale) + "px";
+                }
                 break;
             case 'track':
-                style.left = (e.detail.x - container.x / scale - this.$.mainContentWrapper.xOffset) + "px";
-                style.top = (e.detail.y - container.y / scale - this.$.mainContentWrapper.yOffset) + "px";
+                style.left = (parseInt(style.left) + e.detail.ddx) + "px";
+                style.top = (parseInt(style.top) + e.detail.ddy) + "px";
+                console.log(`${element.getBoundingClientRect().x}|${style.left}`);
                 break;
             case 'end':
                 style.cursor = 'grab';
@@ -198,34 +202,29 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
     updateDebugInfo() {
         let style = this.$.mainContentWrapper.style;
-        this.debugInfo = `left:${style.left} top:${style.top} scale:${Math.round(this.$.mainContentWrapper.scale * 100)}%`;
-
-        let scale = this.$.mainContentWrapper.scale;
-        let container = this.$.wrapper.getBoundingClientRect();
-        let boundingClientRect = this.$.mainContentWrapper.getBoundingClientRect();
-        console.log('>1', container.x, container.y);
-        console.log('>2', boundingClientRect.x / scale, boundingClientRect.y / scale);
+        this.debugInfo = `x:${parseInt(style.left || '-50000') + 50000} y:${parseInt(style.left || '-50000') + 50000} scale:${Math.round(this.$.mainContentWrapper.scale * 100)}%`;
     }
 
     handleTrack(e) {
         let container = this.$.mainContent.getBoundingClientRect();
+        let element = this.$[e.target.id];
+        let style = element.style;
         let scale = this.$.mainContentWrapper.scale;
-        switch(e.detail.state) {
+        switch (e.detail.state) {
             case 'start':
-                this.$.testElement.xOffset = e.detail.x - this.$.testElement.getBoundingClientRect().x / scale;
-                this.$.testElement.yOffset = e.detail.y - this.$.testElement.getBoundingClientRect().y / scale;
+                style.left = (element.getBoundingClientRect().x - container.x) / scale + "px";
+                style.top = (element.getBoundingClientRect().y - container.y) / scale + "px";
                 break;
             case 'track':
-                this.$.testElement.style.left = (e.detail.x - container.x / scale - this.$.testElement.xOffset) + "px";
-                this.$.testElement.style.top = (e.detail.y - container.y / scale - this.$.testElement.yOffset) + "px";
-                console.log(e.detail);
+                style.left = (parseInt(style.left) + e.detail.ddx / scale) + "px";
+                style.top = (parseInt(style.top) + e.detail.ddy / scale) + "px";
                 break;
             case 'end':
-                this.$.testElement.style.cursor = 'grab';
+                style.cursor = 'grab';
                 break;
         }
+        console.log(e);
     }
-
 }
 
 customElements.define(ChMap.is, ChMap);

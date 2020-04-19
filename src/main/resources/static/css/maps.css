@@ -38,7 +38,7 @@
 }
 
 .hide-icons-button {
-    margin-left: 38px;
+    margin-left: 38px !important;
     z-index: 999999999;
 }
 

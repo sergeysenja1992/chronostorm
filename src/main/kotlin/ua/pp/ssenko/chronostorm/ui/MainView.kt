@@ -29,7 +29,7 @@ import ua.pp.ssenko.chronostorm.ui.custom.VaadinTelInput
 import kotlin.reflect.KMutableProperty0
 
 
-@Route("", layout = MainLayout::class)
+@Route("mainview", layout = MainLayout::class)
 @UIScope
 @Component
 @StyleSheet("../css/style.css")
