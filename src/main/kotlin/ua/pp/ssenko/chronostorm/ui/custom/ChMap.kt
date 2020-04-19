@@ -12,7 +12,8 @@ import com.vaadin.flow.component.polymertemplate.PolymerTemplate
 @JsModule("./src/ch-map.js")
 @NpmPackage.Container(
     NpmPackage("@polymer/paper-card", version = "3.0.1"),
-    NpmPackage("@polymer/iron-collapse", version = "3.0.1")
+    NpmPackage("@polymer/iron-collapse", version = "3.0.1"),
+    NpmPackage("pinch-zoom-js", version = "2.3.4")
 )
 class ChMap: PolymerTemplate<IconsModel>(), HasStyle, HasSize {
 

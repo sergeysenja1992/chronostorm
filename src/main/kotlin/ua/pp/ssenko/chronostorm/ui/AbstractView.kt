@@ -37,4 +37,6 @@ abstract class AbstractView(protected val db: ChronostormRepository): VerticalLa
     fun getUserSession(): User? = UI.getCurrent().session.getAttribute(User::class.java)
 
     fun getCurrentUser() = db.getUser(getUserSession()?.key ?: "null")
+
+    open fun mainLayoutUpdated(mainLayout: MainLayout) {}
 }
