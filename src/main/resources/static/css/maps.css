@@ -39,6 +39,7 @@
 
 .hide-icons-button {
     margin-left: 38px;
+    z-index: 999999999;
 }
 
 .hidden-icons-panel {
@@ -62,4 +63,8 @@
 .full-size {
     width: 100%;
     height: 100%;
+}
+
+vaadin-app-layout#drawer {
+    background-color: red;
 }

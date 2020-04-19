@@ -1,48 +1,30 @@
 package ua.pp.ssenko.chronostorm.ui
 
-import com.github.appreciated.card.ClickableCard
-import com.github.appreciated.css.grid.GridLayoutComponent.AutoFlow.ROW_DENSE
-import com.github.appreciated.css.grid.GridLayoutComponent.Overflow.AUTO
-import com.github.appreciated.css.grid.sizes.Flex
-import com.github.appreciated.css.grid.sizes.Length
-import com.github.appreciated.css.grid.sizes.MinMax
-import com.github.appreciated.css.grid.sizes.Repeat.RepeatMode.AUTO_FILL
-import com.github.appreciated.layout.FlexibleGridLayout
-import com.github.mvysny.karibudsl.v10.*
-import com.vaadin.flow.component.Component
+import com.github.mvysny.karibudsl.v10.button
+import com.github.mvysny.karibudsl.v10.horizontalLayout
+import com.github.mvysny.karibudsl.v10.textField
+import com.github.mvysny.karibudsl.v10.verticalLayout
 import com.vaadin.flow.component.HasComponents
 import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.dependency.StyleSheet
-import com.vaadin.flow.component.grid.Grid
 import com.vaadin.flow.component.icon.Icon
-import com.vaadin.flow.component.icon.IronIcon
-import com.vaadin.flow.component.icon.VaadinIcon
 import com.vaadin.flow.component.icon.VaadinIcon.*
-import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.CENTER
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.textfield.TextField
-import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider
-import com.vaadin.flow.data.provider.DataProvider
-import com.vaadin.flow.data.renderer.ComponentRenderer
 import com.vaadin.flow.data.value.ValueChangeMode.EAGER
-import com.vaadin.flow.data.value.ValueChangeMode.TIMEOUT
-import com.vaadin.flow.function.SerializableBiFunction
 import com.vaadin.flow.router.BeforeEvent
 import com.vaadin.flow.router.HasUrlParameter
 import com.vaadin.flow.router.OptionalParameter
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.spring.annotation.UIScope
-import nc.unc.vaadin.flow.polymer.iron.icons.*
 import org.springframework.stereotype.Service
 import ua.pp.ssenko.chronostorm.domain.LocationMap
 import ua.pp.ssenko.chronostorm.repository.ChronostormRepository
 import ua.pp.ssenko.chronostorm.repository.MapsService
+import ua.pp.ssenko.chronostorm.ui.custom.ChMap
 import ua.pp.ssenko.chronostorm.ui.custom.IconsAcc
-import ua.pp.ssenko.chronostorm.ui.custom.IconsPanel
 import ua.pp.ssenko.chronostorm.utils.hideSpacing
-import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 
 
@@ -107,6 +89,7 @@ class MapView(
             setWidthFull()
             searchField = textField {
                 placeholder = "Поиск"
+                isClearButtonVisible = true
             }
             button(icon = Icon(PLUS)) {
 
@@ -143,7 +126,8 @@ class MapView(
     }
 
     fun HasComponents.renderMap(map: LocationMap) {
-        
+        val chMap = ChMap()
+        add(chMap)
     }
 
     private fun navigateToMapsList() {
