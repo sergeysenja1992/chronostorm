@@ -59,7 +59,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
     right: 10px;
     top: 10px;
     display: inline-block;
-    z-index: 999999999;
+    z-index: 999999999!important;
 }
 </style>
 
@@ -87,7 +87,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
         this.map = {};
         this.$.mainContentWrapper.scale = 1;
         window.addEventListener("wheel", event => {
-            if(event.ctrlKey === true) {
+            //if(event.ctrlKey === true) {
                 const delta = Math.sign(event.deltaY);
                 event.preventDefault();
                 if (delta > 0) {
@@ -106,7 +106,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
                     this.$.mainContentWrapper.style.transform = `scale(${scale})`;
                 }
                 this.updateDebugInfo();
-            }
+            //}
         });
         this.i = 0;
 
@@ -119,7 +119,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
         }, false);
         let self = this;
         this.root.getElementById("mainContent").addEventListener("touchmove", function(e) {
-            if (e.touches.length !== 2 && e.touches[0] && e.touches[1]) {
+            if (!e || e.touches.length !== 2 || !e.targetTouches[0] || !e.targetTouches[1]) {
                 return;
             }
 
@@ -221,6 +221,23 @@ class ChMap extends GestureEventListeners(PolymerElement){
             case 'end':
                 style.cursor = 'grab';
                 break;
+        }
+        this.$server.updateElement(JSON.stringify({
+            type: 'move',
+            elementId: e.target.id,
+            context: {
+                left: style.left,
+                top: style.top
+            }
+        }));
+    }
+
+    updateElement(event) {
+        let updateEvent = JSON.parse(event);
+        if (updateEvent.type === 'move') {
+            let style = this.$[updateEvent.elementId].style;
+            style.left = updateEvent.context.left;
+            style.top = updateEvent.context.top;
         }
     }
 }

@@ -68,8 +68,8 @@ open class MainLayout : AppLayout() {
         thread {
             ui.access {
                 ui.page.executeJs("""
-                    document.querySelector("vaadin-app-layout").shadowRoot.querySelector('#drawer').style.zIndex = 999999998;
-                    document.querySelector("vaadin-app-layout").shadowRoot.querySelector('#navbarTop').style.zIndex = 999999998;
+                    document.querySelector("vaadin-app-layout").shadowRoot.querySelector('#drawer').style.zIndex = "999999998!important";
+                    document.querySelector("vaadin-app-layout").shadowRoot.querySelector('#navbarTop').style.zIndex = "999999998!important";
                 """.trimIndent())
             }
         }

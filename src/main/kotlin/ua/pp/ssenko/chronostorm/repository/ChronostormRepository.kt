@@ -48,6 +48,8 @@ class ChronostormRepository(
         save()
     }
 
+    fun getMap(key: String) = db.maps.get(key)
+
 }
 
 data class DataBase (

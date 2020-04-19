@@ -158,7 +158,7 @@ class MapView(
     }
 
     fun HasComponents.renderMap(map: LocationMap) {
-        val chMap = ChMap()
+        val chMap = ChMap(map)
         add(chMap)
     }
 

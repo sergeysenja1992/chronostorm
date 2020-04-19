@@ -2,16 +2,16 @@ package ua.pp.ssenko.chronostorm.repository
 
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
-import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.stereotype.Component
 import ua.pp.ssenko.chronostorm.domain.LocationMap
+import ua.pp.ssenko.chronostorm.utils.logger
 import ua.pp.ssenko.chronostorm.utils.objectMapper
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeFormatter.ISO_LOCAL_TIME
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
 @Component
@@ -25,18 +25,20 @@ class MapsService(
     }
 
     private val executor = Executors.newSingleThreadExecutor()
-    private val activateMaps: Cache<String, LocationMap> = CacheBuilder.newBuilder().weakValues().build()
+    private val activateMaps: MutableMap<String, LocationMap> = ConcurrentHashMap()
     private val filesCache: Cache<String, ByteArray> = CacheBuilder.newBuilder().softValues().build()
 
-    fun getMap(key: String): LocationMap = activateMaps.get(key){loadMap(key)}
+    fun getMap(key: String): LocationMap = activateMaps.computeIfAbsent(key){loadMap(key)}
 
     fun getFile(relativePath: String): ByteArray = filesCache.get(relativePath){loadFile(relativePath)}
 
     private fun loadFile(relativePath: String) = File("${locationMapsDirectory}/${relativePath}").readBytes()
 
-    private fun loadMap(key: String?): LocationMap {
-
-        return LocationMap("1", "")
+    private fun loadMap(key: String): LocationMap {
+        logger.info("Load map with key {}")
+        val map = db.getMap(key)
+        map ?: throw IllegalStateException("Map not found")
+        return LocationMap(key, map.name)
     }
 
     fun createMap() {
