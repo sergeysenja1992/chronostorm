@@ -222,7 +222,6 @@ class ChMap extends GestureEventListeners(PolymerElement){
                 style.cursor = 'grab';
                 break;
         }
-        console.log(e);
     }
 }
 
