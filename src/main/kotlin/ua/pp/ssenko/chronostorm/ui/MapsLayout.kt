@@ -10,11 +10,7 @@ import kotlin.concurrent.thread
 @Push
 class MapsLayout : MainLayout() {
 
-    init {
-        addToNavbar(content())
-    }
-
-    fun content(): Component = TextField().apply {
+    override fun content(): Component = TextField().apply {
         setWidthFull()
         placeholder = "Поиск"
 

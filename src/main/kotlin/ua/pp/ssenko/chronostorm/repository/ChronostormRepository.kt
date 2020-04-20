@@ -28,7 +28,7 @@ class ChronostormRepository(
     }
 
     fun saveMap(map: LocationMapMetainfo) {
-        db.maps.putIfAbsent(map.key, map)
+        db.maps.put(map.key, map)
         save()
     }
 

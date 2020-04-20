@@ -24,16 +24,10 @@ class IconsAcc: PolymerTemplate<IconsModel>(), HasStyle {
     @Id("icons")
     lateinit var icons: Div;
 
-    val iconsPanel = IconsPanel()
-
     override fun onAttach(attachEvent: AttachEvent?) {
         super.onAttach(attachEvent)
-        icons.add(iconsPanel)
         className = "full-size"
     }
 
-    fun setSearch(searchInput: String) {
-        iconsPanel.setSearch(searchInput)
-    }
 }
 

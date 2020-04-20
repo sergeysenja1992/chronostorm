@@ -40,8 +40,9 @@ class ChIconsPanel extends PolymerElement {
 
     <dom-repeat id="materialIcons" items="[[iconsToRender]]" filter="search" searchInput$="[[searchInput]]" initialCount="[[pageSize]]">
       <template>
-        <paper-card class="ch-icon-card" title="[[item.name]]">
-            <iron-icon class="ch-icon" icon="[[item.collection]]:[[item.icon]]"></iron-icon>
+        <paper-card class="ch-icon-card" title="[[item.name]]" 
+        draggable="true" on-dragstart="dragstart" on-dragend="dragend">
+            <iron-icon class="ch-icon" icon="[[item.iconSet]]:[[item.iconName]]"></iron-icon>
             <div class="label-wrapper"><span title="[[item.name]]" class="icon-label">[[item.name]]</span></div>
         </paper-card>
       </template>
@@ -58,9 +59,24 @@ class ChIconsPanel extends PolymerElement {
         return 'ch-icons-panel';
     }
 
+    dragstart(e) {
+        e.dataTransfer.setData("item", JSON.stringify(e.model.item));
+        e.dataTransfer.setData("touchInfo", JSON.stringify({
+            offsetX: e.offsetX, offsetY: e.offsetY
+        }));
+        let event = new CustomEvent("element-drag-start", {});
+        document.dispatchEvent(event);
+    }
+    dragend(e) {
+        let event = new CustomEvent("element-drag-end", {});
+        document.dispatchEvent(event);
+    }
+
     ready() {
         super.ready();
         this.pageSize = 102;
+        console.log(this.iconsJson);
+        this.icons = JSON.parse(this.iconsJson);
         this.initIconsSet();
     }
 

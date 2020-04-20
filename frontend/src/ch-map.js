@@ -61,18 +61,32 @@ class ChMap extends GestureEventListeners(PolymerElement){
     display: inline-block;
     z-index: 999999999!important;
 }
+.reset-scale {
+    cursor: pointer;
+}
+.map-icon {
+    position: absolute;
+}
 </style>
 
 <div id="wrapper" class="wrapper">
     <div id="mainContentWrapper">
-        <div id="mainContent" class="bg-grid" on-track="handleMainContentTrack" on-down="handleTrackDown" on-up="handleTrackUp">
+        <div id="mainContent" class="bg-grid" on-track="handleMainContentTrack" on-down="handleTrackDown" on-up="handleTrackUp" on-dragover="allowdrop">
             <div id="testElement" on-track="handleTrack" on-down="handleTrackDown" on-up="handleTrackUp">[[message]]</div>
+
+            <dom-repeat id="mapIcons" items="[[mapIconsList]]" initialCount="50">
+                <template>
+                    <iron-icon class="map-icon" id="[[item.id]]" icon="[[item.iconSet]]:[[item.iconName]]"
+                        style="left:[[item.position.left]]px; top:[[item.position.top]]px;"
+                        on-track="handleTrack" on-down="handleTrackDown" on-up="handleTrackUp"
+                    ></iron-icon>
+                </template>
+            </dom-repeat>
+
         </div>    
     </div>
     <div id="debugInfo">
-        [[debugInfo]]
-        <br>
-        [[eventInfo]]
+        [[debugInfo]] <paper-card on-click="resetScale"><iron-icon class="reset-scale" icon="image:flare"></iron-icon></paper-card>
     </div>
 </div>
 `;
@@ -82,11 +96,55 @@ class ChMap extends GestureEventListeners(PolymerElement){
         return 'ch-map';
     }
 
+    allowdrop(e) {
+        e.preventDefault();
+    }
+
     ready() {
         super.ready();
-        this.map = {};
+        this.resetScale();
+        let map = JSON.parse(this.locationMap);
+        this.mapObjects = map.mapObjects;
+        this.updateMapObjects();
         this.$.mainContentWrapper.scale = 1;
+        this.initMouseZoom();
+        this.initTouchZoom();
+        this.initDragAndDropListeners();
+    }
+
+    updateMapObjects() {
+        this.mapObjectsList = Object.values(this.mapObjects);
+        this.mapIconsList = this.mapObjectsList.filter(it => it.type === 'icon');
+        this.$.mapIcons.render();
+    }
+
+    initDragAndDropListeners() {
+        let self = this;
+        this.root.getElementById("mainContent").addEventListener("drop", function (e) {
+            let mapObject = JSON.parse(e.dataTransfer.getData("item"));
+            let touchInfo = JSON.parse(e.dataTransfer.getData("touchInfo"));
+            console.log(e, mapObject, touchInfo);
+            let style = self.$.mainContentWrapper.style;
+            mapObject.position.left = e.offsetX; // + parseInt(style.left) * -1;
+            mapObject.position.top = e.offsetY; // + parseInt(style.top) * -1;
+            self.$server.updateElement('add', JSON.stringify({
+                type: 'add', context: mapObject
+            }));
+            e.preventDefault();
+        });
+        document.addEventListener('element-drag-start', function (e) {
+            self.dragInProgress = true;
+        });
+        document.addEventListener('element-drag-end', function (e) {
+            self.dragInProgress = false;
+        });
+    }
+
+    initMouseZoom() {
         window.addEventListener("wheel", event => {
+            if (this.dragInProgress) {
+                return;
+            }
             let path = event.__composedPath || event.path;
             if (path.filter(it => it.id === 'mainContent').length <= 0) {
                 return;
@@ -94,24 +152,29 @@ class ChMap extends GestureEventListeners(PolymerElement){
             const delta = Math.sign(event.deltaY);
             event.preventDefault();
             if (delta < 0) {
-                let scale = this.$.mainContentWrapper.scale + 0.05;
-                if (scale > 400) {
+                let scale = this.$.mainContentWrapper.scale + 0.02;
+                if (scale > 4) {
                     return;
                 }
-                this.$.mainContentWrapper.scale = scale;
-                this.$.mainContentWrapper.style.transform = `scale(${scale})`;
+                this.updateScale(scale);
             } else {
-                let scale = this.$.mainContentWrapper.scale - 0.05;
-                if (scale < 0.3) {
+                let scale = this.$.mainContentWrapper.scale;
+                if (scale < 0.33) {
+                    scale = (scale * 100 * 0.95) / 100;
+                } else {
+                    scale = scale - 0.02;
+                }
+                if (scale < 0.05) {
                     return;
                 }
-                this.$.mainContentWrapper.scale = scale;
-                this.$.mainContentWrapper.style.transform = `scale(${scale})`;
+                this.updateScale(scale);
             }
             this.updateDebugInfo();
         });
-        this.i = 0;
+    }
 
+    initTouchZoom() {
+        let self = this;
         this.root.getElementById("mainContent").addEventListener("touchstart", function(e) {
             if (e.touches.length !== 2) {
                 return;
@@ -119,8 +182,10 @@ class ChMap extends GestureEventListeners(PolymerElement){
             this.zoomMainContent = e;
             this.zoomMainContentStartScale = self.$.mainContentWrapper.scale || 1;
         }, false);
-        let self = this;
-        this.root.getElementById("mainContent").addEventListener("touchmove", function(e) {
+        this.root.getElementById("mainContent").addEventListener("touchmove", function (e) {
+            if (self.dragInProgress) {
+                return;
+            }
             if (!e || e.touches.length !== 2 || !e.targetTouches[0] || !e.targetTouches[1]) {
                 return;
             }
@@ -129,23 +194,36 @@ class ChMap extends GestureEventListeners(PolymerElement){
             let hypot2 = self.distance(e.targetTouches);
             let scale = this.zoomMainContentStartScale;
             scale = (hypot2 / hypot1) * scale;
-            if (scale < 0.31) {
-                scale = 0.31;
+            if (scale < 0.05) {
+                scale = 0.05;
             }
             if (scale > 4) {
                 scale = 4;
             }
-            self.$.mainContentWrapper.scale = scale;
-            self.$.mainContentWrapper.style.transform = `scale(${scale})`;
+            self.updateScale(scale);
             self.updateDebugInfo()
         }, false);
-        this.root.getElementById("mainContent").addEventListener("touchend", function(e) {
+        this.root.getElementById("mainContent").addEventListener("touchend", function (e) {
             if (e.touches.length !== 2) {
                 return;
             }
             this.zoomMainContent = null;
         }, false);
         this.updateDebugInfo();
+    }
+
+
+    resetScale() {
+        this.updateScale(1);
+        let style = this.$.mainContentWrapper.style;
+        style.left = "-50000px";
+        style.top = "-50000px";
+        this.updateDebugInfo();
+    }
+
+    updateScale(scale) {
+        this.$.mainContentWrapper.scale = scale;
+        this.$.mainContentWrapper.style.transform = `scale(${scale})`;
     }
 
     distance(touches) {
@@ -167,11 +245,11 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
     handleTrackDown(e) {
         this.unselectText();
-        this.$[e.target.id].style.cursor = 'move';
+        e.target.style.cursor = 'move';
     }
 
     handleTrackUp(e) {
-        this.$[e.target.id].style.cursor = 'grab';
+        e.target.style.cursor = 'grab';
     }
 
     handleMainContentTrack(e) {
@@ -208,7 +286,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
     handleTrack(e) {
         let container = this.$.mainContent.getBoundingClientRect();
-        let element = this.$[e.target.id];
+        let element = e.target;
         let style = element.style;
         let scale = this.$.mainContentWrapper.scale;
         switch (e.detail.state) {
@@ -217,14 +295,14 @@ class ChMap extends GestureEventListeners(PolymerElement){
                 style.top = (element.getBoundingClientRect().y - container.y) / scale + "px";
                 break;
             case 'track':
-                style.left = (parseInt(style.left) + e.detail.ddx / scale) + "px";
-                style.top = (parseInt(style.top) + e.detail.ddy / scale) + "px";
+                style.left = (parseInt(style.left) + Math.round((e.detail.ddx * 100000) / Math.round(scale * 1000)) / 100) + "px";
+                style.top = (parseInt(style.top) + Math.round((e.detail.ddy * 100000) / Math.round(scale * 1000)) / 100) + "px";
                 break;
             case 'end':
                 style.cursor = 'grab';
                 break;
         }
-        this.$server.updateElement(JSON.stringify({
+        this.$server.updateElement('move', JSON.stringify({
             type: 'move',
             elementId: e.target.id,
             context: {
@@ -236,8 +314,23 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
     updateElement(event) {
         let updateEvent = JSON.parse(event);
+        console.log("Server event >>", updateEvent);
         if (updateEvent.type === 'move') {
-            let style = this.$[updateEvent.elementId].style;
+            this.moveEventHandler(updateEvent);
+        } else if (updateEvent.type === 'add') {
+            this.addEventHandler(updateEvent);
+        }
+    }
+
+    addEventHandler(addEvent) {
+        this.mapObjects[addEvent.context.id] = addEvent.context;
+        this.updateMapObjects();
+    }
+
+    moveEventHandler(updateEvent) {
+        let element = this.shadowRoot.querySelector('#' + updateEvent.elementId);
+        if (element) {
+            let style = element.style;
             style.left = updateEvent.context.left;
             style.top = updateEvent.context.top;
         }

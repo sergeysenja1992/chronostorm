@@ -5,10 +5,12 @@ import com.github.mvysny.karibudsl.v10.horizontalLayout
 import com.github.mvysny.karibudsl.v10.icon
 import com.github.mvysny.karibudsl.v10.label
 import com.vaadin.flow.component.AttachEvent
+import com.vaadin.flow.component.Component
 import com.vaadin.flow.component.HasElement
 import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.applayout.AppLayout
 import com.vaadin.flow.component.applayout.DrawerToggle
+import com.vaadin.flow.component.html.Label
 import com.vaadin.flow.component.icon.VaadinIcon
 import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
@@ -90,5 +92,8 @@ open class MainLayout : AppLayout() {
     override fun showRouterLayoutContent(hasElement: HasElement?) {
         super.showRouterLayoutContent(hasElement)
         this.view = hasElement
+        addToNavbar(content())
     }
+
+    open fun content(): Component = Label()
 }

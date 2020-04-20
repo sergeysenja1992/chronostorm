@@ -3,27 +3,42 @@ package ua.pp.ssenko.chronostorm.domain
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.vaadin.flow.component.UI
+import ua.pp.ssenko.chronostorm.utils.objectMapper
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
+import kotlin.collections.HashMap
 
-class LocationMap(val id: String, val name: String, val order: Long = 0) {
+class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var order: Long = 0) {
 
     private val executor = Executors.newSingleThreadExecutor()
 
-    val size: Size = Size(2048, 2048, 1.0)
-    val customIcons: MutableList<CustomIcon> = ArrayList()
-    val mapObjects: MutableList<MapObject> = ArrayList()
+    val customIcons: MutableMap<String, CustomIcon> = HashMap()
+    val mapObjects: MutableMap<String, MapObject> = HashMap()
 
     @JsonIgnore
     val subscribers: MutableMap<String, (String) -> Unit> = ConcurrentHashMap()
 
     fun toMetainfo() = LocationMapMetainfo(id, name, order)
 
-    fun updateElement(updateEvent: String) {
+    fun updateElement(type: String, updateEvent: String): String {
+        if (type == "add") {
+            val addEvent: AddEvent = objectMapper().readValue(updateEvent)
+            addEvent.context.id = "ID" + UUID.randomUUID().toString().replace("-", "")
+            mapObjects.put(addEvent.context.id, addEvent.context)
+            notifyAllSubscribers(objectMapper().writeValueAsString(addEvent))
+        } else {
+            notifyAllExcludeMeSubscribers(updateEvent)
+        }
+        return updateEvent
+    }
+
+    private fun notifyAllExcludeMeSubscribers(updateEvent: String) {
         val pushId = UI.getCurrent().session.pushId
         executor.submit {
-            subscribers.forEach {key, value ->
+            subscribers.forEach { key, value ->
                 if (key != pushId) {
                     value.invoke(updateEvent)
                 }
@@ -31,15 +46,19 @@ class LocationMap(val id: String, val name: String, val order: Long = 0) {
         }
     }
 
-    fun getIdentityHashCode() = System.identityHashCode(this)
+    private fun notifyAllSubscribers(updateEvent: String) {
+        executor.submit {
+            subscribers.forEach { key, value ->
+                value.invoke(updateEvent)
+            }
+        }
+    }
 
 }
 
-data class UpdateEvent(
-        val elementId: String,
-        val type: String,
-        val context: Map<String, Any>
-)
+data class UpdateEvent(val elementId: String, val type: String, val context: Map<String, Any>)
+
+data class AddEvent(val type: String, val context: MapObject)
 
 data class LocationMapMetainfo(
         val id: String,
@@ -51,14 +70,14 @@ data class LocationMapMetainfo(
 }
 
 class CustomIcon {
+    val id = UUID.randomUUID().toString()
     val defaultSize = Size()
     var previewUrl: String = ""
     var originUrl: String = ""
     var name: String = ""
-    var zIndex: Int = 0  // start from 10_000 and increment by 100
 }
 
-class Position(var top: Int, var left: Int)
+class Position(@Volatile var top: Int, @Volatile var left: Int)
 
 class Size(var width: Int = 0, var height: Int = 0, var scale: Double = 1.0)
 
@@ -66,9 +85,10 @@ class Size(var width: Int = 0, var height: Int = 0, var scale: Double = 1.0)
 @JsonSubTypes(value = [
     JsonSubTypes.Type(value = IconObject::class, name = "icon")
 ])
-abstract class MapObject(val id: Int) {
+abstract class MapObject(var id: String = "", var name: String, var type: String) {
     val size: Size = Size()
     val position: Position = Position(0, 0)
+    var zIndex: Int = 10_000  // start from 10_000 and increment by 100
 }
 
-class IconObject(id: Int, val iconName: String, val iconSet: String): MapObject(id)
+class IconObject(id: String = "", val iconName: String, val iconSet: String): MapObject(id, iconName, "icon")

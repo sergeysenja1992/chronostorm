@@ -7,6 +7,7 @@ import com.vaadin.flow.component.polymertemplate.PolymerTemplate
 import com.vaadin.flow.templatemodel.TemplateModel
 import ua.pp.ssenko.chronostorm.domain.LocationMap
 import ua.pp.ssenko.chronostorm.utils.logger
+import ua.pp.ssenko.chronostorm.utils.objectMapper
 
 @Tag("ch-map")
 @JsModule("./src/ch-map.js")
@@ -17,13 +18,16 @@ import ua.pp.ssenko.chronostorm.utils.logger
 )
 class ChMap(val locationMap: LocationMap): PolymerTemplate<ChMapModel>(), HasStyle, HasSize {
 
+    init {
+        model.setLocationMap(objectMapper().writeValueAsString(locationMap))
+    }
+
     override fun onAttach(attachEvent: AttachEvent?) {
         super.onAttach(attachEvent)
         val value = UI.getCurrent()
         val element = element;
         locationMap.subscribers.put(UI.getCurrent().session.pushId) {
             value.access {
-                logger.info(">>> ${it}")
                 element.callJsFunction("updateElement", it)
             }
         }
@@ -36,9 +40,8 @@ class ChMap(val locationMap: LocationMap): PolymerTemplate<ChMapModel>(), HasSty
     }
 
     @ClientCallable
-    fun updateElement(event: String) {
-        logger.info(">> ${event}")
-        locationMap.updateElement(event)
+    fun updateElement(type: String, event: String) {
+        locationMap.updateElement(type, event)
     }
 
 }
@@ -46,6 +49,6 @@ class ChMap(val locationMap: LocationMap): PolymerTemplate<ChMapModel>(), HasSty
 interface ChMapModel : TemplateModel {
     fun setName(name: String)
     fun getName(name: String)
-
+    fun setLocationMap(locationMap: String)
 }
 

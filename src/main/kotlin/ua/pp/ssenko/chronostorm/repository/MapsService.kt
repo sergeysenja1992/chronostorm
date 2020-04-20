@@ -1,5 +1,6 @@
 package ua.pp.ssenko.chronostorm.repository
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import org.springframework.stereotype.Component
@@ -38,7 +39,8 @@ class MapsService(
         logger.info("Load map with key {}")
         val map = db.getMap(key)
         map ?: throw IllegalStateException("Map not found")
-        return LocationMap(key, map.name)
+        val toMetadataPath = LocationMap(key).toMetadataPath()
+        return objectMapper().readValue(File(toMetadataPath))
     }
 
     fun createMap() {
@@ -46,9 +48,8 @@ class MapsService(
                 "Карта от ${LocalDate.now()} ${LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))}",
                 System.currentTimeMillis())
         initMapDir(locationMap)
-        locationMap.save()
+        locationMap.saveMap()
         db.saveMap(locationMap.toMetainfo())
-
     }
 
     private fun initMapsDir() {
@@ -76,11 +77,16 @@ class MapsService(
 
     private fun LocationMap.iconsFile() = "${locationMapsDirectory}/icons.json"
 
-    private fun LocationMap.save() {
+    private fun LocationMap.saveMap() {
         executor.submit {
             val metadata = File(toMetadataPath())
             objectMapper().writeValue(metadata, this)
+            db.saveMap(this.toMetainfo())
         }
+    }
+
+    fun save(map: LocationMap) {
+        map.saveMap()
     }
 
 }
