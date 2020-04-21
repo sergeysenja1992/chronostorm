@@ -6,8 +6,9 @@ import com.vaadin.flow.component.dependency.NpmPackage
 import com.vaadin.flow.component.polymertemplate.PolymerTemplate
 import com.vaadin.flow.templatemodel.TemplateModel
 import ua.pp.ssenko.chronostorm.domain.LocationMap
-import ua.pp.ssenko.chronostorm.utils.logger
+import ua.pp.ssenko.chronostorm.repository.MapsService
 import ua.pp.ssenko.chronostorm.utils.objectMapper
+import java.util.concurrent.Executors
 
 @Tag("ch-map")
 @JsModule("./src/ch-map.js")
@@ -16,7 +17,7 @@ import ua.pp.ssenko.chronostorm.utils.objectMapper
     NpmPackage("@polymer/iron-collapse", version = "3.0.1"),
     NpmPackage("pinch-zoom-js", version = "2.3.4")
 )
-class ChMap(val locationMap: LocationMap): PolymerTemplate<ChMapModel>(), HasStyle, HasSize {
+class ChMap(val locationMap: LocationMap, val maps: MapsService): PolymerTemplate<ChMapModel>(), HasStyle, HasSize {
 
     init {
         model.setLocationMap(objectMapper().writeValueAsString(locationMap))
@@ -42,6 +43,7 @@ class ChMap(val locationMap: LocationMap): PolymerTemplate<ChMapModel>(), HasSty
     @ClientCallable
     fun updateElement(type: String, event: String) {
         locationMap.updateElement(type, event)
+        maps.save(locationMap)
     }
 
 }

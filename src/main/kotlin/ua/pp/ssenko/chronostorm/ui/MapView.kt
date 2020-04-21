@@ -30,6 +30,7 @@ import ua.pp.ssenko.chronostorm.ui.custom.IconsAcc
 import ua.pp.ssenko.chronostorm.ui.custom.IconsPanel
 import ua.pp.ssenko.chronostorm.utils.hideSpacing
 import java.util.*
+import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 
@@ -184,7 +185,7 @@ class MapView(
     }
 
     fun HasComponents.renderMap(map: LocationMap) {
-        val chMap = ChMap(map)
+        val chMap = ChMap(map, maps)
         add(chMap)
     }
 
@@ -217,15 +218,15 @@ class MapView(
 
     fun VaadinIcon.toIcon(): IconObject {
         val icon = IconObject(iconName = "vaadin", iconSet = name.toLowerCase(Locale.ENGLISH).replace('_', '-'))
-        icon.size.height = 48
-        icon.size.width = 48
+        icon.size.height = "48px"
+        icon.size.width = "48px"
         return icon
     }
 
     fun IronIconDefinition.toIcon(): IconObject {
         val icon = IconObject(iconName = icon(), iconSet = collection())
-        icon.size.height = 48
-        icon.size.width = 48
+        icon.size.height = "48px"
+        icon.size.width = "48px"
         return icon
     }
 

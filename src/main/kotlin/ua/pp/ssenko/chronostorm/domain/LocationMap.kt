@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.vaadin.flow.component.UI
+import ua.pp.ssenko.chronostorm.repository.MapsService
 import ua.pp.ssenko.chronostorm.utils.objectMapper
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -19,6 +20,9 @@ class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var
     val mapObjects: MutableMap<String, MapObject> = HashMap()
 
     @JsonIgnore
+    lateinit var maps: MapsService
+
+    @JsonIgnore
     val subscribers: MutableMap<String, (String) -> Unit> = ConcurrentHashMap()
 
     fun toMetainfo() = LocationMapMetainfo(id, name, order)
@@ -29,6 +33,14 @@ class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var
             addEvent.context.id = "ID" + UUID.randomUUID().toString().replace("-", "")
             mapObjects.put(addEvent.context.id, addEvent.context)
             notifyAllSubscribers(objectMapper().writeValueAsString(addEvent))
+        } else if (type == "move") {
+            notifyAllExcludeMeSubscribers(updateEvent)
+            maps.doAsync {
+                val event: UpdateEvent = objectMapper().readValue(updateEvent)
+                val mapObject = mapObjects.get(event.elementId)
+                mapObject?.position?.left = event.context.get("left")?.toString() ?: "0px"
+                mapObject?.position?.top = event.context.get("top")?.toString() ?: "0px"
+            }
         } else {
             notifyAllExcludeMeSubscribers(updateEvent)
         }
@@ -77,9 +89,9 @@ class CustomIcon {
     var name: String = ""
 }
 
-class Position(@Volatile var top: Int, @Volatile var left: Int)
+class Position(@Volatile var top: String, @Volatile var left: String)
 
-class Size(var width: Int = 0, var height: Int = 0, var scale: Double = 1.0)
+class Size(var width: String = "0px", var height: String = "0px", var scale: Double = 1.0)
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(value = [
@@ -87,7 +99,7 @@ class Size(var width: Int = 0, var height: Int = 0, var scale: Double = 1.0)
 ])
 abstract class MapObject(var id: String = "", var name: String, var type: String) {
     val size: Size = Size()
-    val position: Position = Position(0, 0)
+    val position: Position = Position("0px", "0px")
     var zIndex: Int = 10_000  // start from 10_000 and increment by 100
 }
 

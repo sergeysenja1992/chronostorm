@@ -77,7 +77,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
             <dom-repeat id="mapIcons" items="[[mapIconsList]]" initialCount="50">
                 <template>
                     <iron-icon class="map-icon" id="[[item.id]]" icon="[[item.iconSet]]:[[item.iconName]]"
-                        style="left:[[item.position.left]]px; top:[[item.position.top]]px;"
+                        style="left:[[item.position.left]]; top:[[item.position.top]]; width:[[item.size.width]]; height:[[item.size.height]];"
                         on-track="handleTrack" on-down="handleTrackDown" on-up="handleTrackUp"
                     ></iron-icon>
                 </template>
@@ -86,7 +86,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
         </div>    
     </div>
     <div id="debugInfo">
-        [[debugInfo]] <paper-card on-click="resetScale"><iron-icon class="reset-scale" icon="image:flare"></iron-icon></paper-card>
+        [[debugInfo]] <paper-card on-click="resetScale"><iron-icon class="reset-scale" icon="maps:my-location"></iron-icon></paper-card>
     </div>
 </div>
 `;
@@ -125,8 +125,8 @@ class ChMap extends GestureEventListeners(PolymerElement){
             let touchInfo = JSON.parse(e.dataTransfer.getData("touchInfo"));
             console.log(e, mapObject, touchInfo);
             let style = self.$.mainContentWrapper.style;
-            mapObject.position.left = e.offsetX; // + parseInt(style.left) * -1;
-            mapObject.position.top = e.offsetY; // + parseInt(style.top) * -1;
+            mapObject.position.left = e.offsetX + "px"; // + parseInt(style.left) * -1;
+            mapObject.position.top = e.offsetY + "px"; // + parseInt(style.top) * -1;
             self.$server.updateElement('add', JSON.stringify({
                 type: 'add', context: mapObject
             }));

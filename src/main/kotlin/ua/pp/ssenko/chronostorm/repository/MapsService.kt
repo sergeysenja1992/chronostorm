@@ -40,7 +40,9 @@ class MapsService(
         val map = db.getMap(key)
         map ?: throw IllegalStateException("Map not found")
         val toMetadataPath = LocationMap(key).toMetadataPath()
-        return objectMapper().readValue(File(toMetadataPath))
+        val locationMap = objectMapper().readValue<LocationMap>(File(toMetadataPath))
+        locationMap.maps = this
+        return locationMap
     }
 
     fun createMap() {
@@ -82,6 +84,12 @@ class MapsService(
             val metadata = File(toMetadataPath())
             objectMapper().writeValue(metadata, this)
             db.saveMap(this.toMetainfo())
+        }
+    }
+
+    fun doAsync(task: () -> Unit) {
+        executor.submit {
+            task.invoke()
         }
     }
 
