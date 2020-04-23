@@ -31,6 +31,7 @@ import ua.pp.ssenko.chronostorm.ui.custom.IconsPanel
 import ua.pp.ssenko.chronostorm.utils.hideSpacing
 import java.util.*
 import java.util.concurrent.Executors
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 
@@ -62,6 +63,8 @@ class MapView(
     var iconHidden = false
     var hideIconsButton: Button? = null
     var iconsPanel: VerticalLayout? = null
+
+    private val iconsSet = fullIconsSet()
 
     override fun setParameter(event: BeforeEvent?, @OptionalParameter id: String?) {
         mapId = id
@@ -137,8 +140,6 @@ class MapView(
         }
     }
 
-    private val ICON_ITEM_SIZE = 70
-
     fun VerticalLayout.renderIcons(map: LocationMap) {
         lateinit var searchField: TextField
         horizontalLayout {
@@ -171,7 +172,7 @@ class MapView(
             add(iconsAcc)
         }
 
-        val iconsPanel = IconsPanel(fullIconsSet())
+        val iconsPanel = IconsPanel(iconsSet)
         iconsAcc.apply {
             icons.add(iconsPanel)
         }

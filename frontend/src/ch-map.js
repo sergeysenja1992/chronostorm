@@ -57,9 +57,10 @@ class ChMap extends GestureEventListeners(PolymerElement){
 #debugInfo {
     position: fixed;
     right: 10px;
-    top: 10px;
+    bottom: 10px;
     display: inline-block;
     z-index: 999999999!important;
+    background-color: #f5f5f5;
 }
 .reset-scale {
     cursor: pointer;
@@ -72,8 +73,6 @@ class ChMap extends GestureEventListeners(PolymerElement){
 <div id="wrapper" class="wrapper">
     <div id="mainContentWrapper">
         <div id="mainContent" class="bg-grid" on-track="handleMainContentTrack" on-down="handleTrackDown" on-up="handleTrackUp" on-dragover="allowdrop">
-            <div id="testElement" on-track="handleTrack" on-down="handleTrackDown" on-up="handleTrackUp">[[message]]</div>
-
             <dom-repeat id="mapIcons" items="[[mapIconsList]]" initialCount="50">
                 <template>
                     <iron-icon class="map-icon" id="[[item.id]]" icon="[[item.iconSet]]:[[item.iconName]]"
@@ -86,7 +85,10 @@ class ChMap extends GestureEventListeners(PolymerElement){
         </div>    
     </div>
     <div id="debugInfo">
-        [[debugInfo]] <paper-card on-click="resetScale"><iron-icon class="reset-scale" icon="maps:my-location"></iron-icon></paper-card>
+        [[debugInfo]] 
+        <paper-card on-click="resetScale"><iron-icon class="reset-scale" icon="maps:my-location"></iron-icon></paper-card>
+        <paper-card on-click="zoomIn"><iron-icon class="reset-scale" icon="icons:zoom-in"></iron-icon></paper-card>
+        <paper-card on-click="zoomOut"><iron-icon class="reset-scale" icon="icons:zoom-out"></iron-icon></paper-card>
     </div>
 </div>
 `;
@@ -153,9 +155,6 @@ class ChMap extends GestureEventListeners(PolymerElement){
             event.preventDefault();
             if (delta < 0) {
                 let scale = this.$.mainContentWrapper.scale + 0.02;
-                if (scale > 4) {
-                    return;
-                }
                 this.updateScale(scale);
             } else {
                 let scale = this.$.mainContentWrapper.scale;
@@ -163,9 +162,6 @@ class ChMap extends GestureEventListeners(PolymerElement){
                     scale = (scale * 100 * 0.95) / 100;
                 } else {
                     scale = scale - 0.02;
-                }
-                if (scale < 0.05) {
-                    return;
                 }
                 this.updateScale(scale);
             }
@@ -179,6 +175,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
             if (e.touches.length !== 2) {
                 return;
             }
+            this.touchInProgress = true;
             this.zoomMainContent = e;
             this.zoomMainContentStartScale = self.$.mainContentWrapper.scale || 1;
         }, false);
@@ -194,12 +191,6 @@ class ChMap extends GestureEventListeners(PolymerElement){
             let hypot2 = self.distance(e.targetTouches);
             let scale = this.zoomMainContentStartScale;
             scale = (hypot2 / hypot1) * scale;
-            if (scale < 0.05) {
-                scale = 0.05;
-            }
-            if (scale > 4) {
-                scale = 4;
-            }
             self.updateScale(scale);
             self.updateDebugInfo()
         }, false);
@@ -207,11 +198,19 @@ class ChMap extends GestureEventListeners(PolymerElement){
             if (e.touches.length !== 2) {
                 return;
             }
+            this.touchInProgress = false;
             this.zoomMainContent = null;
         }, false);
         this.updateDebugInfo();
     }
 
+    zoomIn() {
+        this.updateScale(this.$.mainContentWrapper.scale + 0.15);
+    }
+
+    zoomOut() {
+        this.updateScale(this.$.mainContentWrapper.scale - 0.15);
+    }
 
     resetScale() {
         this.updateScale(1);
@@ -222,8 +221,15 @@ class ChMap extends GestureEventListeners(PolymerElement){
     }
 
     updateScale(scale) {
+        if (scale < 0.05) {
+            scale = 0.05;
+        }
+        if (scale > 4) {
+            scale = 4;
+        }
         this.$.mainContentWrapper.scale = scale;
         this.$.mainContentWrapper.style.transform = `scale(${scale})`;
+        this.updateDebugInfo();
     }
 
     distance(touches) {
@@ -253,7 +259,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
     }
 
     handleMainContentTrack(e) {
-        if (e.target.id !== 'mainContent') {
+        if (e.target.id !== 'mainContent' || this.touchInProgress) {
             return;
         }
         let container = this.$.wrapper.getBoundingClientRect();
@@ -285,6 +291,9 @@ class ChMap extends GestureEventListeners(PolymerElement){
     }
 
     handleTrack(e) {
+        if (this.touchInProgress) {
+            return;
+        }
         let container = this.$.mainContent.getBoundingClientRect();
         let element = e.target;
         let style = element.style;
