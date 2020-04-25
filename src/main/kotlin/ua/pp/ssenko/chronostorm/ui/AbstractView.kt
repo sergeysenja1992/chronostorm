@@ -6,6 +6,7 @@ import com.vaadin.flow.router.BeforeEnterEvent
 import com.vaadin.flow.router.BeforeEnterObserver
 import ua.pp.ssenko.chronostorm.domain.User
 import ua.pp.ssenko.chronostorm.repository.ChronostormRepository
+import ua.pp.ssenko.chronostorm.utils.getUniqId
 import ua.pp.ssenko.chronostorm.utils.logger
 import ua.pp.ssenko.chronostorm.utils.setAttribute
 
@@ -24,6 +25,7 @@ abstract class AbstractView(protected val db: ChronostormRepository): VerticalLa
     }
 
     init {
+        UI.getCurrent().session.getUniqId()
         UI.getCurrent().session.setAttribute(User("sergeysenja1992@gmail.com", "Семъён"))
     }
 

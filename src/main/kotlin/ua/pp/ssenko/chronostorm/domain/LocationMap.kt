@@ -6,7 +6,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.vaadin.flow.component.UI
 import ua.pp.ssenko.chronostorm.repository.MapsService
+import ua.pp.ssenko.chronostorm.utils.getUniqId
 import ua.pp.ssenko.chronostorm.utils.objectMapper
+import ua.pp.ssenko.chronostorm.utils.uniqId
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
@@ -30,7 +32,7 @@ class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var
     fun updateElement(type: String, updateEvent: String): String {
         if (type == "add") {
             val addEvent: AddEvent = objectMapper().readValue(updateEvent)
-            addEvent.context.id = "ID" + UUID.randomUUID().toString().replace("-", "")
+            addEvent.context.id = uniqId()
             mapObjects.put(addEvent.context.id, addEvent.context)
             notifyAllSubscribers(objectMapper().writeValueAsString(addEvent))
         } else if (type == "move") {
@@ -48,10 +50,10 @@ class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var
     }
 
     private fun notifyAllExcludeMeSubscribers(updateEvent: String) {
-        val pushId = UI.getCurrent().session.pushId
+        val id = UI.getCurrent().session.getUniqId()
         executor.submit {
             subscribers.forEach { key, value ->
-                if (key != pushId) {
+                if (key != id) {
                     value.invoke(updateEvent)
                 }
             }
@@ -101,6 +103,7 @@ abstract class MapObject(var id: String = "", var name: String, var type: String
     val size: Size = Size()
     val position: Position = Position("0px", "0px")
     var zIndex: Int = 10_000  // start from 10_000 and increment by 100
+    var order: Int = 0
 }
 
 class IconObject(id: String = "", val iconName: String, val iconSet: String): MapObject(id, iconName, "icon")

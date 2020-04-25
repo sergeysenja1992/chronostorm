@@ -214,6 +214,7 @@ class MapView(
         icons.addAll(IronSocialIcons.values().asList().map { it.toIcon() })
         icons.addAll(VaadinIcon.values().asList().map { it.toIcon() })
         icons.sortBy { it.name }
+        icons.sortBy { it.order }
         return icons
     }
 
