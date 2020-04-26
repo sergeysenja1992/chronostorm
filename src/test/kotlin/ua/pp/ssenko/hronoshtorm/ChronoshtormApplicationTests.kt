@@ -3,10 +3,10 @@ package ua.pp.ssenko.hronoshtorm
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
-@SpringBootTest
+//@SpringBootTest
 class ChronoshtormApplicationTests {
 
-	@Test
+	//-@Test
 	fun contextLoads() {
 	}
 

@@ -5,9 +5,10 @@ import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.page.Push
 import com.vaadin.flow.component.textfield.TextField
 import com.vaadin.flow.data.value.ValueChangeMode
+import com.vaadin.flow.shared.ui.Transport
 import kotlin.concurrent.thread
 
-@Push
+@Push(transport = Transport.WEBSOCKET)
 class MapViewLayout : MainLayout() {
 
     override fun content(): Component = TextField().apply {

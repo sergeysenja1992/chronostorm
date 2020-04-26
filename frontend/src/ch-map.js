@@ -162,9 +162,10 @@ class ChMap extends GestureEventListeners(PolymerElement){
             <dom-repeat id="cursors" items="[[cursorsList]]" initialCount="50">
                 <template>
                     <div id="[[uniqId]]" class="cursor"
-                    style="left:[[item.left]]; top:[[item.top]]; filter:[[item.filter]]"
+                    style="left:[[item.left]]; top:[[item.top]]; filter:[[item.filter]];"
                     >
-                        <iron-icon id="[[uniqId]]-cursor" src="img/cursor.svg" style="height: 100%; width: 100%;"></iron-icon>            
+                        <iron-icon id="[[uniqId]]-cursor" src="img/cursor.svg" style="height: 100%; width: 100%;"></iron-icon>         
+                        <span>[[item.userName]]</span>  
                     </div>
                 </template>
             </dom-repeat>
@@ -233,7 +234,8 @@ class ChMap extends GestureEventListeners(PolymerElement){
             context: {
                 left: left,
                 top: top,
-                filter: this.cursorFilter
+                filter: this.cursorFilter,
+                userName: this.userName
             }
         }));
     };
@@ -290,7 +292,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
             if (this.dragInProgress) {
                 return;
             }
-            let path = event.__composedPath || event.path;
+            let path = this.getPath(event);
             if (path.filter(it => it.id === 'mainContent').length <= 0) {
                 return;
             }
@@ -394,7 +396,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
     handleTrackDown(e) {
         this.unselectText();
-        let path = e.__composedPath || e.path;
+        let path = this.getPath(e);
         let mapObjects = path.filter(it => [...(it.classList || [])].includes('map-object'));
         let selected = this.shadowRoot.querySelector('.selected');
         if (selected) {
@@ -410,7 +412,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
     handleTrackUp(e) {
         this.unselectText();
-        let path = e.__composedPath || e.path;
+        let path = this.getPath(e);
         let mapObjects = path.filter(it => [...(it.classList || [])].includes('map-object'));
         if (mapObjects.length > 0) {
             mapObjects[0].style.cursor = 'grab';
@@ -457,7 +459,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
             return;
         }
         let element = e.target;
-        let path = e.__composedPath || e.path;
+        let path = this.getPath(e);
         let mapObjects = path.filter(it => [...(it.classList || [])].includes('map-object'));
         if (mapObjects.length <= 0) {
             return;
@@ -494,7 +496,11 @@ class ChMap extends GestureEventListeners(PolymerElement){
         }));
     }
 
-    // server call this method
+    getPath(e) {
+        return e.composedPath() || e.path;
+    }
+
+// server call this method
     updateElement(event) {
         let updateEvent = JSON.parse(event);
         console.log("Server event >>", updateEvent);
@@ -514,7 +520,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
         self.mouseMoveDebouncer = self.mouseMoveDebouncer || {};
         self.mouseMoveDebouncer[event.elementId] = Debouncer.debounce(
             self.mouseMoveDebouncer[event.elementId],
-            timeOut.after(5000),
+            timeOut.after(500000),
             () => {
                 console.log('debounce', event);
                 delete this.cursors[event.elementId];

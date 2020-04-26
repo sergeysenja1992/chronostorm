@@ -4,10 +4,14 @@ import com.vaadin.flow.component.*
 import com.vaadin.flow.component.dependency.JavaScript
 import com.vaadin.flow.component.dependency.JsModule
 import com.vaadin.flow.component.dependency.NpmPackage
+import com.vaadin.flow.component.page.Push
 import com.vaadin.flow.component.polymertemplate.PolymerTemplate
+import com.vaadin.flow.shared.ui.Transport
 import com.vaadin.flow.templatemodel.TemplateModel
 import ua.pp.ssenko.chronostorm.domain.LocationMap
+import ua.pp.ssenko.chronostorm.domain.User
 import ua.pp.ssenko.chronostorm.repository.MapsService
+import ua.pp.ssenko.chronostorm.utils.getAttribute
 import ua.pp.ssenko.chronostorm.utils.getUniqId
 import ua.pp.ssenko.chronostorm.utils.objectMapper
 import ua.pp.ssenko.chronostorm.utils.uniqId
@@ -27,13 +31,41 @@ class ChMap(val locationMap: LocationMap, val maps: MapsService): PolymerTemplat
         val uniqId = UI.getCurrent().session.getUniqId()
         model.setUniqId(uniqId)
         val hashCode = uniqId.hashCode()
-        val r = hashCode % 255
-        val g = (hashCode/1000) % 255
-        val b = (hashCode/1000_000) % 255
+        val rgbList = listOf<Rgb>(
+                rgb(229, 57, 53),
+                rgb(216, 27, 96),
+                rgb(142, 36, 170),
+                rgb(94, 53, 177),
+                rgb(57, 73, 171),
+                rgb(30, 136, 229),
+                rgb(3, 155, 229),
+                rgb(0, 172, 193),
+                rgb(0, 137, 123),
+                rgb(67, 160, 71),
+                rgb(124, 179, 66),
+                rgb(192, 202, 51),
+                rgb(253, 216, 53),
+                rgb(255, 179, 0),
+                rgb(251, 140, 0),
+                rgb(244, 81, 30),
+                rgb(109, 76, 65),
+                rgb(117, 117, 117),
+                rgb(183, 28, 28),
+                rgb(136, 14, 79),
+                rgb(74, 20, 140),
+                rgb(27, 94, 32),
+                rgb(245, 127, 23),
+                rgb(191, 54, 12)
+        )
+        val (r,g,b) = rgbList.get(Math.abs(hashCode % rgbList.size - 1))
         model.setR(r)
         model.setG(g)
         model.setB(b)
+        val user: User = UI.getCurrent().session.getAttribute()
+        model.setUserName(user.name)
     }
+
+    fun rgb(r: Int, g:Int, b: Int) = Rgb(r, g, b)
 
     override fun onAttach(attachEvent: AttachEvent?) {
         super.onAttach(attachEvent)
@@ -60,9 +92,12 @@ class ChMap(val locationMap: LocationMap, val maps: MapsService): PolymerTemplat
 
 }
 
+data class Rgb(val r: Int, val g:Int, val b: Int)
+
 interface ChMapModel : TemplateModel {
     fun setName(name: String)
     fun getName(name: String)
+    fun setUserName(userName: String)
     fun setLocationMap(locationMap: String)
     fun setUniqId(uniqId: String)
     fun setR(r: Int)
