@@ -43,6 +43,10 @@ class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var
                 mapObject?.position?.left = event.context.get("left")?.toString() ?: "0px"
                 mapObject?.position?.top = event.context.get("top")?.toString() ?: "0px"
             }
+        } else if (type == "delete") {
+            val event: UpdateEvent = objectMapper().readValue(updateEvent)
+            mapObjects.remove(event.elementId)
+            notifyAllSubscribers(updateEvent)
         } else {
             notifyAllExcludeMeSubscribers(updateEvent)
         }

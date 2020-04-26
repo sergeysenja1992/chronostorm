@@ -60,6 +60,7 @@ class ChIconsPanel extends PolymerElement {
     }
 
     dragstart(e) {
+        console.log(e);
         e.dataTransfer.setData("item", JSON.stringify(e.model.item));
         e.dataTransfer.setData("touchInfo", JSON.stringify({
             offsetX: e.offsetX, offsetY: e.offsetY

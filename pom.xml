@@ -30,12 +30,6 @@
 	<dependencies>
 
 		<dependency>
-			<groupId>org.vaadin.stefan</groupId>
-			<artifactId>dnd</artifactId>
-			<version>1.1.0</version>
-		</dependency>
-
-		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>28.2-jre</version>

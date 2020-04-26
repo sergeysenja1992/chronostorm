@@ -87,6 +87,7 @@ class ChIconsAcc extends PolymerElement {
         let accItems = ['user-elements', 'interactive-elements', 'icons'];
         let id = accItems[2];
         this.openAcc(id);
+        console.log("READY icons");
     }
 
 
@@ -100,10 +101,17 @@ class ChIconsAcc extends PolymerElement {
             return;
         }
         let id = ids[0];
-        this.openAcc(id);
+        if (id === this.openedId && this.prevOpened) {
+            this.openAcc(this.prevOpened);
+        } else {
+            this.openAcc(id);
+        }
+
     }
 
     openAcc(id) {
+        this.prevOpened = this.openedId;
+        this.openedId = id;
         let accItems = ['user-elements', 'interactive-elements', 'icons'];
         accItems.filter(it => it !== id).forEach(it => {
             this.$[it].classList.remove("acc-show");
