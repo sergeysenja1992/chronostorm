@@ -104,6 +104,7 @@ class MapView(
         } else {
             iconsPanel?.removeClassName("hidden-icons-panel")
         }
+        this@MapView.iconHidden = isHidden
     }
 
     override fun VerticalLayout.content() {

@@ -18,11 +18,13 @@ import ua.pp.ssenko.chronostorm.utils.uniqId
 
 @Tag("ch-map")
 @JsModule("./src/ch-map.js")
-@JavaScript("./js/icon-color.js")
+@JavaScript.Container(
+        JavaScript("./js/icon-color.js"),
+        JavaScript("./js/touch.js")
+)
 @NpmPackage.Container(
-    NpmPackage("@polymer/paper-card", version = "3.0.1"),
-    NpmPackage("@polymer/iron-collapse", version = "3.0.1"),
-    NpmPackage("pinch-zoom-js", version = "2.3.4")
+        NpmPackage("@polymer/paper-card", version = "3.0.1"),
+        NpmPackage("@polymer/iron-collapse", version = "3.0.1")
 )
 class ChMap(val locationMap: LocationMap, val maps: MapsService): PolymerTemplate<ChMapModel>(), HasStyle, HasSize {
 
@@ -57,7 +59,7 @@ class ChMap(val locationMap: LocationMap, val maps: MapsService): PolymerTemplat
                 rgb(245, 127, 23),
                 rgb(191, 54, 12)
         )
-        val (r,g,b) = rgbList.get(Math.abs(hashCode % rgbList.size - 1))
+        val (r,g,b) = rgbList.get(Math.abs(hashCode % (rgbList.size - 1)))
         model.setR(r)
         model.setG(g)
         model.setB(b)

@@ -2,6 +2,7 @@ package ua.pp.ssenko.chronostorm.ui.custom
 
 import com.vaadin.flow.component.Tag
 import com.vaadin.flow.component.UI
+import com.vaadin.flow.component.dependency.JavaScript
 import com.vaadin.flow.component.dependency.JsModule
 import com.vaadin.flow.component.dependency.NpmPackage
 import com.vaadin.flow.component.dependency.StyleSheet
@@ -20,9 +21,12 @@ import kotlin.concurrent.thread
 
 @Tag("ch-icons-panel")
 @JsModule("./src/ch-icons-panel.js")
+@JavaScript.Container(
+        JavaScript("./js/touch.js")
+)
 @NpmPackage.Container(
-    NpmPackage("@polymer/paper-card", version = "3.0.1"),
-    NpmPackage("@polymer/iron-collapse", version = "3.0.1")
+        NpmPackage("@polymer/paper-card", version = "3.0.1"),
+        NpmPackage("@polymer/iron-collapse", version = "3.0.1")
 )
 @StyleSheet("../css/maps.css")
 class IconsPanel(val icons: List<IconObject>): PolymerTemplate<IconsModel>() {

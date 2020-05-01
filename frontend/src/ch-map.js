@@ -43,12 +43,13 @@ class ChMap extends GestureEventListeners(PolymerElement){
     background: unset;
 }
 .selected {
-  background: unset
+  background: unset;
   width: 100px;
   height: 100px;
   position: absolute;
   top: 100px;
   left: 100px;
+  resize: both;
 }
 
 .resizers {
@@ -65,32 +66,32 @@ class ChMap extends GestureEventListeners(PolymerElement){
 }
 
 .selected .resizers .resizer{
-  width: 10px;
-  height: 10px;
-  border-radius: 50%; /*magic to turn square into circle*/
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
   background: white;
   border: 1px solid #787878;
   position: absolute;
 }
 
 .selected .resizers .resizer.top-left {
-  left: -5px;
-  top: -5px;
+  left: -2px;
+  top: -2px;
   cursor: nwse-resize; /*resizer cursor*/
 }
 .selected .resizers .resizer.top-right {
-  right: -5px;
-  top: -5px;
+  right: -2px;
+  top: -2px;
   cursor: nesw-resize;
 }
 .selected .resizers .resizer.bottom-left {
-  left: -5px;
-  bottom: -5px;
+  left: -2px;
+  bottom: -2px;
   cursor: nesw-resize;
 }
 .selected .resizers .resizer.bottom-right {
-  right: -5px;
-  bottom: -5px;
+  right: -2px;
+  bottom: -2px;
   cursor: nwse-resize;
 }
 
@@ -149,10 +150,10 @@ class ChMap extends GestureEventListeners(PolymerElement){
                         style="left:[[item.position.left]]; top:[[item.position.top]]; width:[[item.size.width]]; height:[[item.size.height]];"
                     >
                         <div class='resizers'>
-                        <div class='resizer top-left'></div>
-                        <div class='resizer top-right'></div>
-                        <div class='resizer bottom-left'></div>
-                        <div class='resizer bottom-right'></div>
+                        <div class='resizer top-left' on-down="resizeStart" on-up="resizeStop"></div>
+                        <div class='resizer top-right' on-down="resizeStart" on-up="resizeStop"></div>
+                        <div class='resizer bottom-left' on-down="resizeStart" on-up="resizeStop"></div>
+                        <div class='resizer bottom-right' on-down="resizeStart" on-up="resizeStop"></div>
                     <iron-icon class="map-icon" icon="[[item.iconSet]]:[[item.iconName]]"></iron-icon>
                         </div>
                     </div>
@@ -209,7 +210,6 @@ class ChMap extends GestureEventListeners(PolymerElement){
         if (window.getFilterByRgb) {
             this.cursorFilter = window.getFilterByRgb(this.r, this.g, this.b);
         }
-
     }
 
     initKeyboardActions() {
@@ -246,6 +246,14 @@ class ChMap extends GestureEventListeners(PolymerElement){
                 }
             }
         });
+    }
+
+    resizeStart() {
+        this.resizeInprogress = true;
+    }
+
+    resizeStop() {
+        this.resizeInprogress = false;
     }
 
     updateCursorCoordinates(event) {
@@ -310,7 +318,6 @@ class ChMap extends GestureEventListeners(PolymerElement){
             let mapObject = JSON.parse(e.dataTransfer.getData("item"));
             let touchInfo = JSON.parse(e.dataTransfer.getData("touchInfo"));
             console.log(e, mapObject, touchInfo);
-            let style = self.$.mainContentWrapper.style;
             mapObject.position.left = e.offsetX + "px"; // + parseInt(style.left) * -1;
             mapObject.position.top = e.offsetY + "px"; // + parseInt(style.top) * -1;
             self.$server.updateElement('add', JSON.stringify({
@@ -323,6 +330,21 @@ class ChMap extends GestureEventListeners(PolymerElement){
         });
         document.addEventListener('element-drag-end', function (e) {
             self.dragInProgress = false;
+        });
+        document.addEventListener('element-drop', function (e) {
+            console.warn(e.detail);
+            let wrapper = self.$.wrapper;
+            let main = self.$.mainContentWrapper;
+            let scale = self.$.mainContentWrapper.scale;
+            let x = - parseFloat(main.offsetLeft) + (e.detail.x - parseFloat(wrapper.offsetLeft) - e.detail.padding + 11) / scale;
+            let y = - parseFloat(main.offsetTop) + (e.detail.y - parseFloat(wrapper.offsetTop) - e.detail.padding + 5) / scale;
+            let mapObject = JSON.parse(e.detail.item);
+            mapObject.position.left = x + "px"; // + parseInt(style.left) * -1;
+            mapObject.position.top = y + "px"; // + parseInt(style.top) * -1;
+            self.$server.updateElement('add', JSON.stringify({
+                type: 'add', context: mapObject
+            }));
+            console.warn(x, y, mapObject);
         });
     }
 
@@ -462,7 +484,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
     }
 
     handleMainContentTrack(e) {
-        if (e.target.id !== 'mainContent' || this.touchInProgress) {
+        if (e.target.id !== 'mainContent' || this.touchInProgress || this.resizeInprogress) {
             return;
         }
         let container = this.$.wrapper.getBoundingClientRect();
@@ -494,7 +516,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
     }
 
     handleTrack(e) {
-        if (this.touchInProgress) {
+        if (this.touchInProgress || this.resizeInprogress) {
             return;
         }
         let element = e.target;
@@ -556,7 +578,6 @@ class ChMap extends GestureEventListeners(PolymerElement){
     }
 
     onMouseMove(event) {
-        console.log(event);
         this.cursors[event.elementId] = event.context;
         this.cursorsList = Object.values(this.cursors);
         self.mouseMoveDebouncer = self.mouseMoveDebouncer || {};
@@ -564,7 +585,6 @@ class ChMap extends GestureEventListeners(PolymerElement){
             self.mouseMoveDebouncer[event.elementId],
             timeOut.after(5000),
             () => {
-                console.log('debounce', event);
                 delete this.cursors[event.elementId];
                 this.cursorsList = Object.values(this.cursors);
             }
@@ -594,84 +614,6 @@ class ChMap extends GestureEventListeners(PolymerElement){
         }
     }
 
-    /*Make resizable div*/
-    makeResizableDiv() {
-        const div = 'selected';
-        const element = this.shadowRoot.querySelector(div);
-        const resizers = this.shadowRoot.querySelectorAll(div + ' .resizer');
-        const minimum_size = 20;
-        let original_width = 0;
-        let original_height = 0;
-        let original_x = 0;
-        let original_y = 0;
-        let original_mouse_x = 0;
-        let original_mouse_y = 0;
-        for (let i = 0;i < resizers.length; i++) {
-            const currentResizer = resizers[i];
-            currentResizer.addEventListener('mousedown', function(e) {
-                e.preventDefault();
-                original_width = parseFloat(getComputedStyle(element, null).getPropertyValue('width').replace('px', ''));
-                original_height = parseFloat(getComputedStyle(element, null).getPropertyValue('height').replace('px', ''));
-                original_x = element.getBoundingClientRect().left;
-                original_y = element.getBoundingClientRect().top;
-                original_mouse_x = e.pageX;
-                original_mouse_y = e.pageY;
-                window.addEventListener('mousemove', resize);
-                window.addEventListener('mouseup', stopResize);
-            });
-
-            function resize(e) {
-                if (currentResizer.classList.contains('bottom-right')) {
-                    const width = original_width + (e.pageX - original_mouse_x);
-                    const height = original_height + (e.pageY - original_mouse_y);
-                    if (width > minimum_size) {
-                        element.style.width = width + 'px'
-                    }
-                    if (height > minimum_size) {
-                        element.style.height = height + 'px'
-                    }
-                }
-                else if (currentResizer.classList.contains('bottom-left')) {
-                    const height = original_height + (e.pageY - original_mouse_y);
-                    const width = original_width - (e.pageX - original_mouse_x);
-                    if (height > minimum_size) {
-                        element.style.height = height + 'px';
-                    }
-                    if (width > minimum_size) {
-                        element.style.width = width + 'px';
-                        element.style.left = original_x + (e.pageX - original_mouse_x) + 'px'
-                    }
-                }
-                else if (currentResizer.classList.contains('top-right')) {
-                    const width = original_width + (e.pageX - original_mouse_x);
-                    const height = original_height - (e.pageY - original_mouse_y);
-                    if (width > minimum_size) {
-                        element.style.width = width + 'px'
-                    }
-                    if (height > minimum_size) {
-                        element.style.height = height + 'px';
-                        element.style.top = original_y + (e.pageY - original_mouse_y) + 'px'
-                    }
-                }
-                else {
-                    const width = original_width - (e.pageX - original_mouse_x);
-                    const height = original_height - (e.pageY - original_mouse_y);
-                    if (width > minimum_size) {
-                        element.style.width = width + 'px';
-                        element.style.left = original_x + (e.pageX - original_mouse_x) + 'px'
-                    }
-                    if (height > minimum_size) {
-                        element.style.height = height + 'px';
-                        element.style.top = original_y + (e.pageY - original_mouse_y) + 'px'
-                    }
-                }
-            }
-
-            function stopResize() {
-                window.removeEventListener('mousemove', resize)
-            }
-        }
-    }
 
 }
 
