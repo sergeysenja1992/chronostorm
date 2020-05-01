@@ -336,16 +336,21 @@ class ChMap extends GestureEventListeners(PolymerElement){
             let wrapper = self.$.wrapper;
             let main = self.$.mainContentWrapper;
             let scale = self.$.mainContentWrapper.scale;
-            let x = - parseFloat(main.offsetLeft) + (e.detail.x - parseFloat(wrapper.offsetLeft) - e.detail.padding + 11) / scale;
-            let y = - parseFloat(main.offsetTop) + (e.detail.y - parseFloat(wrapper.offsetTop) - e.detail.padding + 5) / scale;
+            let xPosition = e.detail.x - parseFloat(wrapper.offsetLeft);
+            let yPosition = e.detail.y - parseFloat(wrapper.offsetTop);
+            let x = - self.toMainOffset(main.offsetLeft, scale) + xPosition / scale - 21;
+            let y = - self.toMainOffset(main.offsetTop, scale) + yPosition / scale - 21;
             let mapObject = JSON.parse(e.detail.item);
             mapObject.position.left = x + "px"; // + parseInt(style.left) * -1;
             mapObject.position.top = y + "px"; // + parseInt(style.top) * -1;
             self.$server.updateElement('add', JSON.stringify({
                 type: 'add', context: mapObject
             }));
-            console.warn(x, y, mapObject);
         });
+    }
+
+    toMainOffset(offset, scale) {
+        return ((parseFloat(offset) + 50000) / scale) - 50000;
     }
 
     initMouseZoom() {
@@ -512,7 +517,8 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
     updateDebugInfo() {
         let style = this.$.mainContentWrapper.style;
-        this.debugInfo = `x:${parseInt(style.left || '-50000') + 50000} y:${parseInt(style.left || '-50000') + 50000} scale:${Math.round(this.$.mainContentWrapper.scale * 100)}%`;
+        let scale = this.$.mainContentWrapper.scale;
+        this.debugInfo = `x:${Math.round((parseInt(style.left || '-50000') + 50000) / scale)} y:${Math.round((parseInt(style.left || '-50000') + 50000) / scale)}  scale:${Math.round(this.$.mainContentWrapper.scale * 100)}%`;
     }
 
     handleTrack(e) {
