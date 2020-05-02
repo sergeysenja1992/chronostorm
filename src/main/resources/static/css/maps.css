@@ -64,3 +64,6 @@
     height: 100%;
 }
 
+.map-view {
+    overflow: hidden;
+}

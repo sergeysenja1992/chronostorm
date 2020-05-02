@@ -53,6 +53,7 @@ class ChIconsPanel extends GestureEventListeners(PolymerElement) {
         >
             <iron-icon class="ch-icon" icon="[[item.iconSet]]:[[item.iconName]]"></iron-icon>
             <div class="label-wrapper"><span title="[[item.name]]" class="icon-label">[[item.name]]</span></div>
+            <div style="display: none;">"[[item.iconSet]]:[[item.iconName]]"</div>
         </paper-card>
       </template>
     </dom-repeat>
@@ -139,6 +140,7 @@ class ChIconsPanel extends GestureEventListeners(PolymerElement) {
                 break;
             case 'end':
                 document.dispatchEvent(new CustomEvent("element-drag-end", {}));
+                e.detail.sourceEvent = null;
                 let detail = JSON.parse(JSON.stringify(e.detail));
                 detail.item = JSON.stringify(e.model.item);
                 detail.padding = padding;

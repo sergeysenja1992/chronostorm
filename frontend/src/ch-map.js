@@ -139,6 +139,20 @@ class ChMap extends GestureEventListeners(PolymerElement){
     position: absolute;
 }
 
+.selected .settings {
+    right: -22px;
+    position: absolute;
+    top: -22px;
+    width: 24px;
+    height: 24px;
+    display: block;
+    cursor: pointer;
+}
+
+.settings {
+    display: none;
+}
+
 </style>
 
 <div id="wrapper" class="wrapper">
@@ -154,6 +168,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
                         <div class='resizer top-right' on-down="resizeStart" on-up="resizeStop"></div>
                         <div class='resizer bottom-left' on-down="resizeStart" on-up="resizeStop"></div>
                         <div class='resizer bottom-right' on-down="resizeStart" on-up="resizeStop"></div>
+                        <iron-icon class="settings" icon="icons:settings-applications"></iron-icon>
                     <iron-icon class="map-icon" icon="[[item.iconSet]]:[[item.iconName]]"></iron-icon>
                         </div>
                     </div>
@@ -462,6 +477,9 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
     handleTrackDown(e) {
         this.unselectText();
+        if (e.detail && e.detail.preventer) {
+            this.touches = e.detail.preventer.touches.length;
+        }
         let path = this.getPath(e);
         let mapObjects = path.filter(it => [...(it.classList || [])].includes('map-object'));
         let selected = this.shadowRoot.querySelector('.selected');
@@ -478,6 +496,9 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
     handleTrackUp(e) {
         this.unselectText();
+        if (e.detail && e.detail.preventer) {
+            this.touches = e.detail.preventer.touches.length;
+        }
         let path = this.getPath(e);
         let mapObjects = path.filter(it => [...(it.classList || [])].includes('map-object'));
         if (mapObjects.length > 0) {
@@ -522,6 +543,9 @@ class ChMap extends GestureEventListeners(PolymerElement){
     }
 
     handleTrack(e) {
+        if (this.touches > 1) {
+            return;
+        }
         if (this.touchInProgress || this.resizeInprogress) {
             return;
         }
@@ -618,6 +642,18 @@ class ChMap extends GestureEventListeners(PolymerElement){
             style.left = updateEvent.context.left;
             style.top = updateEvent.context.top;
         }
+    }
+
+    /* call from server for check connection */
+    checkServerConnection() {
+        console.log("check")
+        self.checkServerConnection = Debouncer.debounce(
+            self.checkServerConnection,
+            timeOut.after(35000),
+            () => {
+                window.location.reload();
+            }
+        );
     }
 
 

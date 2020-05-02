@@ -14,6 +14,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Component
 class MapsService(
@@ -28,6 +29,7 @@ class MapsService(
     private val executor = Executors.newSingleThreadExecutor()
     private val activateMaps: MutableMap<String, LocationMap> = ConcurrentHashMap()
     private val filesCache: Cache<String, ByteArray> = CacheBuilder.newBuilder().softValues().build()
+    private val scheduler = Executors.newSingleThreadScheduledExecutor();
 
     fun getMap(key: String): LocationMap = activateMaps.computeIfAbsent(key){loadMap(key)}
 
@@ -96,6 +98,8 @@ class MapsService(
     fun save(map: LocationMap) {
         map.saveMap()
     }
+
+    fun subscribePing(ping: () -> Unit) = scheduler.scheduleAtFixedRate(ping, 0, 30, TimeUnit.SECONDS)
 
 }
 

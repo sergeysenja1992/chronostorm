@@ -68,6 +68,10 @@ class MapView(
 
     private val iconsSet = fullIconsSet()
 
+    init {
+        className = "map-view"
+    }
+
     override fun setParameter(event: BeforeEvent?, @OptionalParameter id: String?) {
         mapId = id
     }

@@ -15,6 +15,7 @@ import ua.pp.ssenko.chronostorm.utils.getAttribute
 import ua.pp.ssenko.chronostorm.utils.getUniqId
 import ua.pp.ssenko.chronostorm.utils.objectMapper
 import ua.pp.ssenko.chronostorm.utils.uniqId
+import java.util.concurrent.ScheduledFuture
 
 @Tag("ch-map")
 @JsModule("./src/ch-map.js")
@@ -27,6 +28,8 @@ import ua.pp.ssenko.chronostorm.utils.uniqId
         NpmPackage("@polymer/iron-collapse", version = "3.0.1")
 )
 class ChMap(val locationMap: LocationMap, val maps: MapsService): PolymerTemplate<ChMapModel>(), HasStyle, HasSize {
+
+    @Volatile var checkConnection: ScheduledFuture<*>? = null
 
     init {
         model.setLocationMap(objectMapper().writeValueAsString(locationMap))
@@ -78,12 +81,18 @@ class ChMap(val locationMap: LocationMap, val maps: MapsService): PolymerTemplat
                 element.callJsFunction("updateElement", it)
             }
         }
+        checkConnection = maps.subscribePing{
+            ui.access {
+                element.callJsFunction("checkServerConnection")
+            }
+        }
         setSizeFull()
     }
 
     override fun onDetach(detachEvent: DetachEvent?) {
         super.onDetach(detachEvent)
         locationMap.subscribers.remove(UI.getCurrent().session.getUniqId())
+        checkConnection?.cancel(true);
     }
 
     @ClientCallable
