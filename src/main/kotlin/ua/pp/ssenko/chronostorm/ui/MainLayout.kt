@@ -16,6 +16,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.page.Push
 import com.vaadin.flow.router.RouterLink
+import com.vaadin.flow.server.VaadinSession
 import com.vaadin.flow.theme.Theme
 import com.vaadin.flow.theme.lumo.Lumo
 import kotlin.concurrent.thread
@@ -62,6 +63,7 @@ open class MainLayout : AppLayout() {
         drawerToggle.addClickListener {
             layoutUpdated()
         }
+        VaadinSession.getCurrent().getSession().setMaxInactiveInterval(3600 * 5);
     }
 
     override fun onAttach(attachEvent: AttachEvent?) {

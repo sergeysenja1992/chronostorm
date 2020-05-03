@@ -4,6 +4,8 @@ import com.vaadin.flow.component.*
 import com.vaadin.flow.component.dependency.JavaScript
 import com.vaadin.flow.component.dependency.JsModule
 import com.vaadin.flow.component.dependency.NpmPackage
+import com.vaadin.flow.component.notification.Notification
+import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.page.Push
 import com.vaadin.flow.component.polymertemplate.PolymerTemplate
 import com.vaadin.flow.shared.ui.Transport
@@ -81,11 +83,6 @@ class ChMap(val locationMap: LocationMap, val maps: MapsService): PolymerTemplat
                 element.callJsFunction("updateElement", it)
             }
         }
-        checkConnection = maps.subscribePing{
-            ui.access {
-                element.callJsFunction("checkServerConnection")
-            }
-        }
         setSizeFull()
     }
 
@@ -99,6 +96,14 @@ class ChMap(val locationMap: LocationMap, val maps: MapsService): PolymerTemplat
     fun updateElement(type: String, event: String) {
         locationMap.updateElement(type, event)
         maps.save(locationMap)
+    }
+
+    @ClientCallable
+    fun showNotification(type: String, text: String) {
+        val notification = Notification(text)
+        notification.setDuration(5000)
+        notification.addThemeVariants(NotificationVariant.valueOf(type));
+        notification.open()
     }
 
 }

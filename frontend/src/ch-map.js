@@ -22,14 +22,14 @@ class ChMap extends GestureEventListeners(PolymerElement){
     min-width: 100%;
     top: -50000px;
     left: -50000px;
-    cursor: grab;
+    cursor: unset;
 }
 
 #mainContent {
     position: relative;
     height: 100000px;
     width: 100000px;
-    cursor: grab;
+    cursor: unset;
 }
 
 #testElement {
@@ -132,6 +132,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
 }
 .map-object {
     position: absolute;
+    cursor: grab;
 }
 .cursor {
     width: 32px;
@@ -225,40 +226,55 @@ class ChMap extends GestureEventListeners(PolymerElement){
         if (window.getFilterByRgb) {
             this.cursorFilter = window.getFilterByRgb(this.r, this.g, this.b);
         }
+        this.initCheckConnection();
+    }
+
+    initCheckConnection() {
+        this.checkServerConnection();
+        setInterval(() => {
+            this.$server.updateElement('checkServerConnection', JSON.stringify({
+                type: 'checkServerConnection'
+            }));
+        }, 30000);
     }
 
     initKeyboardActions() {
         let self = this;
         window.addEventListener("keydown",function(e) {
-            if (window.getSelection && window.getSelection().anchorNode) {
-                return;
-            }
             if (e.ctrlKey === true && e.code === 'KeyC') {
-                let selected = self.shadowRoot.querySelector('.selected');
-                if (selected) {
-                    let selectedObject = self.mapObjects[selected.id];
-                    self.componentBuffer = JSON.stringify(selectedObject);
+                self.unselectText();
+                let allSelected = self.shadowRoot.querySelectorAll('.selected');
+                if (allSelected.length !== 1) {
+                    self.componentBuffer = null;
+                    self.$server.showNotification('LUMO_ERROR', 'На данный момент нельзя скопировать больше чем один элемент.')
+                    return;
                 }
+
+                let selected = allSelected[0];
+                let selectedObject = self.mapObjects[selected.id];
+                self.componentBuffer = JSON.stringify(selectedObject);
             }
 
-            if (e.ctrlKey === true && e.code === 'KeyV') {
+            let cursorPosition = self.currentCursorPosition;
+            if (e.ctrlKey === true && e.code === 'KeyV' && cursorPosition && self.componentBuffer) {
                 let copy = JSON.parse(self.componentBuffer);
-                copy.position.top = parseFloat(copy.position.top) + parseFloat(copy.size.height);
-                copy.position.left = parseFloat(copy.position.left) + parseFloat(copy.size.width);
-                copy.position.top = copy.position.top + 'px';
-                copy.position.left = copy.position.left + 'px';
+                let cursor = self.mouseToMainContentPosition(cursorPosition.pageX, cursorPosition.pageY);
+                let left = parseFloat(copy.size.width) / 2;
+                let top = parseFloat(copy.size.height) / 2;
+                copy.position.left = cursor.x - left + 'px';
+                copy.position.top = cursor.y - top + 'px';
                 self.$server.updateElement('add', JSON.stringify({
                     type: 'add', context: copy
                 }));
                 self.componentBuffer = JSON.stringify(copy);
             }
             if (e.code === 'Delete') {
-                let selected = self.shadowRoot.querySelector('.selected');
-                if (selected) {
+                let allSelected = self.shadowRoot.querySelectorAll('.selected');
+                allSelected.forEach(selected => {
                     self.$server.updateElement('delete', JSON.stringify({
                         type: 'delete', elementId: selected.id, context: {id: selected.id}
                     }));
-                }
+                });
             }
         });
     }
@@ -304,8 +320,15 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
     initMouseMove() {
         let self = this;
+        self.currentCursorPosition = null;
         let element = this.shadowRoot.querySelector('#' + self.uniqId);
         window.addEventListener("mousemove", event => {
+            let isContent = self.getPath(event).filter(it => it.id === 'mainContentWrapper' || it.id === 'wrapper').length > 0;
+            if (!isContent) {
+                self.currentCursorPosition = null;
+                return;
+            }
+            self.currentCursorPosition = event;
             if (!self.lastMouseMoveTime || self.lastMouseMoveTime < new Date().getTime() - 50) {
                 self.lastMouseMoveTime = new Date().getTime();
                 self.updateCursorCoordinates(event);
@@ -348,20 +371,31 @@ class ChMap extends GestureEventListeners(PolymerElement){
         });
         document.addEventListener('element-drop', function (e) {
             console.warn(e.detail);
-            let wrapper = self.$.wrapper;
-            let main = self.$.mainContentWrapper;
-            let scale = self.$.mainContentWrapper.scale;
-            let xPosition = e.detail.x - parseFloat(wrapper.offsetLeft);
-            let yPosition = e.detail.y - parseFloat(wrapper.offsetTop);
-            let x = - self.toMainOffset(main.offsetLeft, scale) + xPosition / scale - 21;
-            let y = - self.toMainOffset(main.offsetTop, scale) + yPosition / scale - 21;
+            let cursorX = e.detail.x;
+            let cursorY = e.detail.y;
+
+            let position = self.mouseToMainContentPosition(cursorX, cursorY);
             let mapObject = JSON.parse(e.detail.item);
-            mapObject.position.left = x + "px"; // + parseInt(style.left) * -1;
-            mapObject.position.top = y + "px"; // + parseInt(style.top) * -1;
+            let left = parseFloat(mapObject.size.width) / 2;
+            let top = parseFloat(mapObject.size.height) / 2;
+            mapObject.position.left = position.x - left + "px"; // + parseInt(style.left) * -1;
+            mapObject.position.top = position.y - top + "px"; // + parseInt(style.top) * -1;
             self.$server.updateElement('add', JSON.stringify({
                 type: 'add', context: mapObject
             }));
         });
+    }
+
+    mouseToMainContentPosition(cursorX, cursorY) {
+        let wrapper = this.$.wrapper;
+        let main = this.$.mainContentWrapper;
+        let scale = this.$.mainContentWrapper.scale;
+        let xPosition = cursorX - parseFloat(wrapper.offsetLeft);
+        let yPosition = cursorY - parseFloat(wrapper.offsetTop);
+        let position = {};
+        position.x = -this.toMainOffset(main.offsetLeft, scale) + xPosition / scale;
+        position.y = -this.toMainOffset(main.offsetTop, scale) + yPosition / scale;
+        return position;
     }
 
     toMainOffset(offset, scale) {
@@ -369,6 +403,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
     }
 
     initMouseZoom() {
+        let self = this;
         window.addEventListener("wheel", event => {
             if (this.dragInProgress) {
                 return;
@@ -377,6 +412,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
             if (path.filter(it => it.id === 'mainContent').length <= 0) {
                 return;
             }
+
             const delta = Math.sign(event.deltaY);
             event.preventDefault();
             if (delta < 0) {
@@ -453,8 +489,26 @@ class ChMap extends GestureEventListeners(PolymerElement){
         if (scale > 4) {
             scale = 4;
         }
+        let cursorPosition = this.currentCursorPosition || {pageX: 0, pageY: 0};
+        let cursor = this.mouseToMainContentPosition(cursorPosition.pageX, cursorPosition.pageY);
+
         this.$.mainContentWrapper.scale = scale;
         this.$.mainContentWrapper.style.transform = `scale(${scale})`;
+
+        let cursorAfterZoom = this.mouseToMainContentPosition(cursorPosition.pageX, cursorPosition.pageY);
+        cursor.x = Math.round(cursor.x);
+        cursor.y = Math.round(cursor.y);
+        cursorAfterZoom.x = Math.round(cursorAfterZoom.x);
+        cursorAfterZoom.x = Math.round(cursorAfterZoom.x);
+
+        if (this.currentCursorPosition) {
+            let style = this.$.mainContentWrapper.style;
+            const scaledDiffX = (cursorAfterZoom.x - cursor.x) * scale;
+            style.left = (parseFloat(style.left) + scaledDiffX) + "px";
+            const scaledDiffY = (cursorAfterZoom.y - cursor.y) * scale;
+            style.top = (parseFloat(style.top) + scaledDiffY) + "px";
+        }
+
         this.updateDebugInfo();
     }
 
@@ -483,8 +537,9 @@ class ChMap extends GestureEventListeners(PolymerElement){
         let path = this.getPath(e);
         let mapObjects = path.filter(it => [...(it.classList || [])].includes('map-object'));
         let selected = this.shadowRoot.querySelector('.selected');
-        if (selected) {
-            selected.classList.remove('selected');
+        if (selected && e.detail.sourceEvent.ctrlKey !== true) {
+            let allSelected = this.shadowRoot.querySelectorAll('.selected');
+            allSelected.forEach(it => it.classList.remove('selected'));
         }
         if (mapObjects.length > 0) {
             mapObjects[0].style.cursor = 'move';
@@ -492,6 +547,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
         } else {
             e.target.style.cursor = 'move';
         }
+        this.updateDebugInfo();
     }
 
     handleTrackUp(e) {
@@ -505,7 +561,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
             mapObjects[0].style.cursor = 'grab';
             this.shadowRoot.querySelector('.selected');
         } else {
-            e.target.style.cursor = 'grab';
+            e.target.style.cursor = 'unset';
         }
     }
 
@@ -529,7 +585,6 @@ class ChMap extends GestureEventListeners(PolymerElement){
                 style.top = (parseFloat(style.top) + e.detail.ddy) + "px";
                 break;
             case 'end':
-                style.cursor = 'grab';
                 break;
         }
         this.updateDebugInfo();
@@ -603,6 +658,8 @@ class ChMap extends GestureEventListeners(PolymerElement){
             this.deleteEventHandler(updateEvent);
         } else if (updateEvent.type === 'mousemove') {
             this.onMouseMove(updateEvent);
+        } else if (updateEvent.type === 'checkServerConnection') {
+            this.checkServerConnection();
         }
 
     }
@@ -629,10 +686,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
     deleteEventHandler(deleteEvent) {
         delete this.mapObjects[deleteEvent.context.id];
         this.updateMapObjects();
-        let selected = this.shadowRoot.querySelector('.selected');
-        if (selected) {
-            selected.classList.remove('selected');
-        }
+        this.shadowRoot.querySelectorAll('.selected').forEach(it => it.classList.remove('selected'));
     }
 
     moveEventHandler(updateEvent) {
@@ -646,12 +700,13 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
     /* call from server for check connection */
     checkServerConnection() {
-        console.log("check")
+        console.log("check");
         self.checkServerConnection = Debouncer.debounce(
             self.checkServerConnection,
             timeOut.after(35000),
             () => {
-                window.location.reload();
+                console.error("connection problem");
+                // window.location.reload();
             }
         );
     }

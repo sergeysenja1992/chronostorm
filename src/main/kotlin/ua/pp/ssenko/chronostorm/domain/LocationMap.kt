@@ -47,10 +47,23 @@ class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var
             val event: UpdateEvent = objectMapper().readValue(updateEvent)
             mapObjects.remove(event.elementId)
             notifyAllSubscribers(updateEvent)
+        } else if (type == "checkServerConnection") {
+            notifyOnlyMe(updateEvent)
         } else {
             notifyAllExcludeMeSubscribers(updateEvent)
         }
         return updateEvent
+    }
+
+    private fun notifyOnlyMe(updateEvent: String) {
+        val id = UI.getCurrent().session.getUniqId()
+        executor.submit {
+            subscribers.forEach { key, value ->
+                if (key == id) {
+                    value.invoke(updateEvent)
+                }
+            }
+        }
     }
 
     private fun notifyAllExcludeMeSubscribers(updateEvent: String) {
@@ -66,7 +79,7 @@ class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var
 
     private fun notifyAllSubscribers(updateEvent: String) {
         executor.submit {
-            subscribers.forEach { key, value ->
+            subscribers.forEach { _, value ->
                 value.invoke(updateEvent)
             }
         }

@@ -57,7 +57,6 @@ class GoogleSingIn(
             } else {
                 UI.getCurrent().navigate("maps")
             }
-            VaadinSession.getCurrent().getSession().setMaxInactiveInterval(3600 * 5);
         } else {
             val notification = Notification("Ошибка авторизации")
             notification.setDuration(5000)
