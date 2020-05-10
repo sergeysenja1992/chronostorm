@@ -47,10 +47,11 @@ class MapsService(
         return locationMap
     }
 
-    fun createMap() {
+    fun createMap(username: String) {
         val locationMap = LocationMap(UUID.randomUUID().toString(),
                 "Карта от ${LocalDate.now()} ${LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))}",
-                System.currentTimeMillis())
+                System.currentTimeMillis(),
+                username)
         initMapDir(locationMap)
         locationMap.saveMap()
         db.saveMap(locationMap.toMetainfo())

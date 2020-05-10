@@ -69,7 +69,8 @@ class ChMap(val locationMap: LocationMap, val maps: MapsService): PolymerTemplat
         model.setG(g)
         model.setB(b)
         val user: User = UI.getCurrent().session.getAttribute()
-        model.setUserName(user.name)
+        model.setUserName(user.username)
+        model.setIsOwner(user.username == locationMap.owner)
     }
 
     fun rgb(r: Int, g:Int, b: Int) = Rgb(r, g, b)
@@ -114,6 +115,7 @@ interface ChMapModel : TemplateModel {
     fun setName(name: String)
     fun getName(name: String)
     fun setUserName(userName: String)
+    fun setIsOwner(isOwner: Boolean)
     fun setLocationMap(locationMap: String)
     fun setUniqId(uniqId: String)
     fun setR(r: Int)

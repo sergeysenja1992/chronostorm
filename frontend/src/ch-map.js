@@ -54,6 +54,8 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
 .resizers {
     padding: 3px;
+    height: calc(100% - 6px);
+    width: calc(100% - 6px);
 }
 
 .selected .resizers{
@@ -138,6 +140,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
     width: 32px;
     height: 32px;
     position: absolute;
+    margin-left: -5px;
 }
 
 .selected .settings {
@@ -453,6 +456,17 @@ class ChMap extends GestureEventListeners(PolymerElement){
             let hypot2 = self.distance(e.targetTouches);
             let scale = this.zoomMainContentStartScale;
             scale = (hypot2 / hypot1) * scale;
+
+
+            let x1 = e.targetTouches[0].clientX;
+            let x2 = e.targetTouches[1].clientX;
+            let y1 = e.targetTouches[0].clientY;
+            let y2 = e.targetTouches[1].clientY;
+            self.currentCursorPosition = {
+                pageX: (x1 + x2) / 2,
+                pageY: (y1 + y2) / 2
+            };
+
             self.updateScale(scale);
             self.updateDebugInfo()
         }, false);
@@ -530,6 +544,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
 
     handleTrackDown(e) {
+        const self = this;
         this.unselectText();
         if (e.detail && e.detail.preventer) {
             this.touches = e.detail.preventer.touches.length;
@@ -544,10 +559,42 @@ class ChMap extends GestureEventListeners(PolymerElement){
         if (mapObjects.length > 0) {
             mapObjects[0].style.cursor = 'move';
             mapObjects[0].classList.add('selected');
+            makeResizableDiv(this, '#' + mapObjects[0].id, (element) => {
+                self.sendResizeElement(element);
+            });
         } else {
             e.target.style.cursor = 'move';
         }
         this.updateDebugInfo();
+    }
+
+    sendResizeElement(element) {
+        const self = this;
+        const sendServerEvent = () => {
+            self.$server.updateElement('resize', JSON.stringify({
+                type: 'resize',
+                elementId: element.id,
+                context: {
+                    left: element.style.left,
+                    top: element.style.top,
+                    height: element.style.height,
+                    width: element.style.width,
+                }
+            }));
+        };
+
+        if (!self.lastResizeTime || self.lastResizeTime < new Date().getTime() - 30) {
+            self.lastResizeTime = new Date().getTime();
+            sendServerEvent();
+        }
+
+        this.resize = Debouncer.debounce(
+            this.resize,
+            timeOut.after(350),
+            () => {
+                sendServerEvent();
+            }
+        );
     }
 
     handleTrackUp(e) {
@@ -654,6 +701,8 @@ class ChMap extends GestureEventListeners(PolymerElement){
             this.moveEventHandler(updateEvent);
         } else if (updateEvent.type === 'add') {
             this.addEventHandler(updateEvent);
+        } else if (updateEvent.type === 'resize') {
+            this.resizeEventHandler(updateEvent);
         } else if (updateEvent.type === 'delete') {
             this.deleteEventHandler(updateEvent);
         } else if (updateEvent.type === 'mousemove') {
@@ -662,6 +711,17 @@ class ChMap extends GestureEventListeners(PolymerElement){
             this.checkServerConnection();
         }
 
+    }
+
+    resizeEventHandler(updateEvent) {
+        let element = this.shadowRoot.querySelector('#' + updateEvent.elementId);
+        if (element) {
+            let style = element.style;
+            style.left = updateEvent.context.left;
+            style.top = updateEvent.context.top;
+            style.width = updateEvent.context.width;
+            style.height = updateEvent.context.height;
+        }
     }
 
     onMouseMove(event) {

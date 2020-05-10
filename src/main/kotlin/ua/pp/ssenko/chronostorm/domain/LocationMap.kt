@@ -14,12 +14,13 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import kotlin.collections.HashMap
 
-class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var order: Long = 0) {
+class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var order: Long = 0, var owner: String? = null) {
 
     private val executor = Executors.newSingleThreadExecutor()
 
     val customIcons: MutableMap<String, CustomIcon> = HashMap()
     val mapObjects: MutableMap<String, MapObject> = HashMap()
+    var previewImage: String? = null
 
     @JsonIgnore
     lateinit var maps: MapsService
@@ -27,7 +28,7 @@ class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var
     @JsonIgnore
     val subscribers: MutableMap<String, (String) -> Unit> = ConcurrentHashMap()
 
-    fun toMetainfo() = LocationMapMetainfo(id, name, order)
+    fun toMetainfo() = LocationMapMetainfo(id, name, order, previewImage, owner)
 
     fun updateElement(type: String, updateEvent: String): String {
         if (type == "add") {
@@ -42,6 +43,16 @@ class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var
                 val mapObject = mapObjects.get(event.elementId)
                 mapObject?.position?.left = event.context.get("left")?.toString() ?: "0px"
                 mapObject?.position?.top = event.context.get("top")?.toString() ?: "0px"
+            }
+        } else if (type == "resize") {
+            notifyAllExcludeMeSubscribers(updateEvent)
+            maps.doAsync {
+                val event: UpdateEvent = objectMapper().readValue(updateEvent)
+                val mapObject = mapObjects.get(event.elementId)
+                mapObject?.position?.left = event.context.get("left")?.toString() ?: "0px"
+                mapObject?.position?.top = event.context.get("top")?.toString() ?: "0px"
+                mapObject?.size?.width = event.context.get("width")?.toString() ?: "0px"
+                mapObject?.size?.height = event.context.get("height")?.toString() ?: "0px"
             }
         } else if (type == "delete") {
             val event: UpdateEvent = objectMapper().readValue(updateEvent)
@@ -95,7 +106,8 @@ data class LocationMapMetainfo(
         val id: String,
         val name: String,
         val order: Long,
-        val previewImage: String? = null
+        val previewImage: String? = null,
+        var owner: String? = null
 ): StoredEntity {
     override val key: String get() = id
 }

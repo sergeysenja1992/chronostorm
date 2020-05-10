@@ -22,8 +22,10 @@ import com.vaadin.flow.router.Route
 import com.vaadin.flow.spring.annotation.UIScope
 import org.springframework.stereotype.Service
 import ua.pp.ssenko.chronostorm.domain.LocationMapMetainfo
+import ua.pp.ssenko.chronostorm.domain.User
 import ua.pp.ssenko.chronostorm.repository.ChronostormRepository
 import ua.pp.ssenko.chronostorm.repository.MapsService
+import ua.pp.ssenko.chronostorm.utils.getAttribute
 import kotlin.concurrent.thread
 
 @Route("maps", layout = MapsLayout::class)
@@ -85,7 +87,8 @@ class MapsList(
             setSizeFull()
         }
         addClickListener {
-            maps.createMap()
+            val user: User = UI.getCurrent().session.getAttribute()
+            maps.createMap(user.username)
             updateUi()
         }
     }
@@ -103,7 +106,10 @@ class MapsList(
         }
         card.width = CARD_SIZE
         card.height = CARD_SIZE
-        card.add(actionButton)
+        val user: User = UI.getCurrent().session.getAttribute()
+        if (user.username == this.owner || this.owner == null) {
+            card.add(actionButton)
+        }
         card.add(verticalLayout {
             label {
                 text = map.name
