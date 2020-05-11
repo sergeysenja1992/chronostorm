@@ -16,6 +16,7 @@ function makeResizableDiv(self, div, resizeCallback) {
     let original_y = 0;
     let original_mouse_x = 0;
     let original_mouse_y = 0;
+    let origin_rotate = 0;
     for (let i = 0;i < resizers.length; i++) {
         const currentResizer = resizers[i];
         currentResizer.addEventListener('mousedown', mouseDown);
@@ -34,6 +35,7 @@ function makeResizableDiv(self, div, resizeCallback) {
             original_y = (element.getBoundingClientRect().y - container.y) / scale;
             original_mouse_x = x;
             original_mouse_y = y;
+            origin_rotate = getCurrentRotation(element);
             window.addEventListener('mousemove', resize);
             window.addEventListener('mouseup', stopResize);
         }
@@ -76,6 +78,27 @@ function makeResizableDiv(self, div, resizeCallback) {
                     element.style.top = original_y + (y - original_mouse_y) / scale + 'px';
                 }
             }
+            else if (currentResizer.classList.contains('rotate')) {
+                let rad2deg = 180/Math.PI;
+                let deg2rad = Math.PI/180;
+
+                const toCenter = ((original_height) / 2 + 30) * scale /* 30 - height rotateLine */;
+                const toCenterX = Math.sin((origin_rotate) * deg2rad) * toCenter;
+                const centerX = original_mouse_x - toCenterX;
+                const toCenterY = Math.cos((origin_rotate) * deg2rad) * toCenter;
+                const centerY = original_mouse_y + toCenterY;
+                self.$.rotateCenter.style.display = 'block';
+                self.rotateCenterX = centerX;
+                self.rotateCenterY = centerY;
+
+                const xDiff = x - centerX;
+                const yDiff = centerY - y;
+
+                let radians = Math.atan2(xDiff, yDiff);
+                const deg = radians * rad2deg;
+                element.style.transform = `rotate(${deg}deg)`;
+                //self.rotateInfo = `origin: ${origin_rotate} | def: ${deg} | xDiff ${xDiff} | yDiff ${yDiff} | to center x ${toCenterX} | to center y ${toCenterY}`;
+            }
             else {
                 const width = original_width - (x - original_mouse_x) / scale;
                 const height = original_height - (y - original_mouse_y) / scale;
@@ -94,9 +117,21 @@ function makeResizableDiv(self, div, resizeCallback) {
         }
 
         function stopResize() {
+            self.$.rotateCenter.style.display = 'none';
             window.removeEventListener('mousemove', resize)
         }
     }
+}
+
+function getCurrentRotation(el) {
+    var st = window.getComputedStyle(el, null);
+    var tm = st.getPropertyValue("transform") || "none";
+    if (tm !== "none") {
+        var values = tm.split('(')[1].split(')')[0].split(',');
+        var angle = Math.round(Math.atan2(values[1],values[0]) * (180/Math.PI));
+        return (angle < 0 ? angle + 360 : angle);
+    }
+    return 0;
 }
 
 window.makeResizableDiv = makeResizableDiv;

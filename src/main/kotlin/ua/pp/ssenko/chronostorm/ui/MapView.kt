@@ -226,7 +226,7 @@ class MapView(
     }
 
     fun VaadinIcon.toIcon(): IconObject {
-        val icon = IconObject(iconName = "vaadin", iconSet = name.toLowerCase(Locale.ENGLISH).replace('_', '-'))
+        val icon = IconObject(iconSet = "vaadin", iconName = name.toLowerCase(Locale.ENGLISH).replace('_', '-'))
         icon.size.height = "48px"
         icon.size.width = "48px"
         return icon

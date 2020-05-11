@@ -76,6 +76,23 @@ class ChMap extends GestureEventListeners(PolymerElement){
   position: absolute;
 }
 
+.selected .resizers .resizer.rotate {
+    right: calc(50% + -2px);
+    top: -30px;
+}
+
+
+.selected .resizers .rotateLine{
+    position: absolute;
+    height: 30px;
+    right: 50%;
+    top: -30px;
+    border-radius: unset;
+    border-left: 3px solid #787878;
+    border-left-style: dashed;
+    box-sizing: border-box;
+}
+
 .selected .resizers .resizer.top-left {
   left: -2px;
   top: -2px;
@@ -157,6 +174,16 @@ class ChMap extends GestureEventListeners(PolymerElement){
     display: none;
 }
 
+.rotate-center {
+    color: white;
+    width: 24px;
+    height: 24px;
+    margin-left: -12px;
+    margin-top: -12px;
+    border-radius: 50%;
+    position: fixed;
+}
+
 </style>
 
 <div id="wrapper" class="wrapper">
@@ -168,6 +195,8 @@ class ChMap extends GestureEventListeners(PolymerElement){
                         style="left:[[item.position.left]]; top:[[item.position.top]]; width:[[item.size.width]]; height:[[item.size.height]];"
                     >
                         <div class='resizers'>
+                        <div class='rotateLine' on-down="resizeStart" on-up="resizeStop"></div>
+                        <div class='resizer rotate' on-down="resizeStart" on-up="resizeStop"></div>
                         <div class='resizer top-left' on-down="resizeStart" on-up="resizeStop"></div>
                         <div class='resizer top-right' on-down="resizeStart" on-up="resizeStop"></div>
                         <div class='resizer bottom-left' on-down="resizeStart" on-up="resizeStop"></div>
@@ -194,8 +223,15 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
         </div>    
     </div>
+    
+    
+    
+    <div id="rotateCenter" class="rotate-center" style="left: [[rotateCenterX]]px; top: [[rotateCenterY]]px">
+        <iron-icon icon="image:rotate-left"></iron-icon>
+    </div>
+        
     <div id="debugInfo">
-        [[debugInfo]] 
+        [[resizeInfo]] [[rotateInfo]] [[debugInfo]] 
         <paper-card on-click="resetScale"><iron-icon class="reset-scale" icon="maps:my-location"></iron-icon></paper-card>
         <paper-card on-click="zoomIn"><iron-icon class="reset-scale" icon="icons:zoom-in"></iron-icon></paper-card>
         <paper-card on-click="zoomOut"><iron-icon class="reset-scale" icon="icons:zoom-out"></iron-icon></paper-card>
@@ -408,7 +444,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
     initMouseZoom() {
         let self = this;
         window.addEventListener("wheel", event => {
-            if (this.dragInProgress) {
+            if (this.dragInProgress || this.resizeInprogress) {
                 return;
             }
             let path = this.getPath(event);
