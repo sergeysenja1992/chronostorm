@@ -51,6 +51,7 @@ class LocationMap(val id: String, @Volatile var name: String = "", @Volatile var
                 val mapObject = mapObjects.get(event.elementId)
                 mapObject?.position?.left = event.context.get("left")?.toString() ?: "0px"
                 mapObject?.position?.top = event.context.get("top")?.toString() ?: "0px"
+                mapObject?.position?.rotate = event.context.get("rotate")?.toString()?.toDoubleOrNull() ?: 0.0
                 mapObject?.size?.width = event.context.get("width")?.toString() ?: "0px"
                 mapObject?.size?.height = event.context.get("height")?.toString() ?: "0px"
             }
@@ -120,7 +121,7 @@ class CustomIcon {
     var name: String = ""
 }
 
-class Position(@Volatile var top: String, @Volatile var left: String)
+class Position(@Volatile var top: String, @Volatile var left: String, @Volatile var rotate: Double = 1.0)
 
 class Size(var width: String = "0px", var height: String = "0px", var scale: Double = 1.0)
 

@@ -197,7 +197,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
             <dom-repeat id="mapIcons" items="[[mapIconsList]]" initialCount="50">
                 <template>
                     <div id="[[item.id]]" class="map-object" on-track="handleTrack" on-down="handleTrackDown" on-up="handleTrackUp"
-                        style="left:[[item.position.left]]; top:[[item.position.top]]; width:[[item.size.width]]; height:[[item.size.height]];"
+                        style="transform: rotate([[item.position.rotate]]deg); left:[[item.position.left]]; top:[[item.position.top]]; width:[[item.size.width]]; height:[[item.size.height]];"
                     >
                         <div class='resizers'>
                         <div class='rotateLine' on-down="resizeStart" on-up="resizeStop"></div>
@@ -234,7 +234,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
     </div>
         
     <div id="debugInfo">
-        [[resizeInfo]] [[rotateInfo]] [[debugInfo]] 
+        [[debugInfo]] 
         <paper-card on-click="resetScale"><iron-icon class="reset-scale" icon="maps:my-location"></iron-icon></paper-card>
         <paper-card on-click="zoomIn"><iron-icon class="reset-scale" icon="icons:zoom-in"></iron-icon></paper-card>
         <paper-card on-click="zoomOut"><iron-icon class="reset-scale" icon="icons:zoom-out"></iron-icon></paper-card>
@@ -277,7 +277,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
             this.$server.updateElement('checkServerConnection', JSON.stringify({
                 type: 'checkServerConnection'
             }));
-        }, 30000);
+        }, 10000);
     }
 
     initKeyboardActions() {
@@ -618,6 +618,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
                     top: element.style.top,
                     height: element.style.height,
                     width: element.style.width,
+                    rotate: getCurrentRotation(element)
                 }
             }));
         };
@@ -760,6 +761,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
             style.top = updateEvent.context.top;
             style.width = updateEvent.context.width;
             style.height = updateEvent.context.height;
+            style.transform = `rotate(${updateEvent.context.rotate}deg)`
         }
     }
 
