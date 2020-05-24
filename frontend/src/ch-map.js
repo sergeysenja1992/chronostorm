@@ -152,6 +152,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
 .map-object {
     position: absolute;
     cursor: grab;
+    transform-origin: center center;
 }
 .cursor {
     width: 32px;
@@ -184,6 +185,10 @@ class ChMap extends GestureEventListeners(PolymerElement){
     position: fixed;
 }
 
+.rotate-cursor {
+    cursor: url('img/rotate.png'), auto;
+}
+
 </style>
 
 <div id="wrapper" class="wrapper">
@@ -196,7 +201,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
                     >
                         <div class='resizers'>
                         <div class='rotateLine' on-down="resizeStart" on-up="resizeStop"></div>
-                        <div class='resizer rotate' on-down="resizeStart" on-up="resizeStop"></div>
+                        <div class='resizer rotate rotate-cursor' on-down="resizeStart" on-up="resizeStop"></div>
                         <div class='resizer top-left' on-down="resizeStart" on-up="resizeStop"></div>
                         <div class='resizer top-right' on-down="resizeStart" on-up="resizeStop"></div>
                         <div class='resizer bottom-left' on-down="resizeStart" on-up="resizeStop"></div>
@@ -223,9 +228,7 @@ class ChMap extends GestureEventListeners(PolymerElement){
 
         </div>    
     </div>
-    
-    
-    
+        
     <div id="rotateCenter" class="rotate-center" style="left: [[rotateCenterX]]px; top: [[rotateCenterY]]px">
         <iron-icon icon="image:rotate-left"></iron-icon>
     </div>
@@ -700,8 +703,8 @@ class ChMap extends GestureEventListeners(PolymerElement){
         let scale = this.$.mainContentWrapper.scale;
         switch (e.detail.state) {
             case 'start':
-                style.left = (element.getBoundingClientRect().x - container.x) / scale + "px";
-                style.top = (element.getBoundingClientRect().y - container.y) / scale + "px";
+                //style.left = (element.getBoundingClientRect().x - container.x) / scale + "px";
+                //style.top = (element.getBoundingClientRect().y - container.y) / scale + "px";
                 break;
             case 'track':
                 let left = Math.round((e.detail.ddx * 1000000) / Math.round(scale * 1000)) / 1000;
